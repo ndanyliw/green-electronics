@@ -9516,7 +9516,7 @@ Standard schematic elements and footprints for 5mm, 3mm, 1206, and 0603 sized LE
 <part name="C2" library="rcl" deviceset="C-EU" device="C0805" value=".1u"/>
 <part name="REF_SEL" library="SparkFun-Connectors" deviceset="M03" device="PTH"/>
 <part name="LVL_EN" library="SparkFun-Connectors" deviceset="M02" device="PTH"/>
-<part name="R5" library="rcl" deviceset="R-US_" device="R0805"/>
+<part name="R5" library="rcl" deviceset="R-US_" device="R0805" value="200k"/>
 <part name="R6" library="rcl" deviceset="R-US_" device="R0805"/>
 <part name="R7" library="rcl" deviceset="R-US_" device="R0805"/>
 <part name="R8" library="rcl" deviceset="R-US_" device="R0805"/>
