@@ -9512,8 +9512,8 @@ Standard schematic elements and footprints for 5mm, 3mm, 1206, and 0603 sized LE
 <part name="R2" library="rcl" deviceset="R-US_" device="R1206"/>
 <part name="R3" library="rcl" deviceset="R-US_" device="R1206" value="0R"/>
 <part name="R4" library="rcl" deviceset="R-US_" device="R1206" value="0R"/>
-<part name="C1" library="rcl" deviceset="C-EU" device="C0805"/>
-<part name="C2" library="rcl" deviceset="C-EU" device="C0805"/>
+<part name="C1" library="rcl" deviceset="C-EU" device="C0805" value=".1u"/>
+<part name="C2" library="rcl" deviceset="C-EU" device="C0805" value=".1u"/>
 <part name="REF_SEL" library="SparkFun-Connectors" deviceset="M03" device="PTH"/>
 <part name="LVL_EN" library="SparkFun-Connectors" deviceset="M02" device="PTH"/>
 <part name="R5" library="rcl" deviceset="R-US_" device="R0805"/>
@@ -9550,6 +9550,8 @@ Standard schematic elements and footprints for 5mm, 3mm, 1206, and 0603 sized LE
 <part name="R27" library="rcl" deviceset="R-US_" device="R0805" value="330"/>
 <part name="R28" library="rcl" deviceset="R-US_" device="R0805" value="330"/>
 <part name="R29" library="rcl" deviceset="R-US_" device="R0805" value="330"/>
+<part name="C3" library="rcl" deviceset="C-EU" device="C0805" value=".1u"/>
+<part name="C4" library="rcl" deviceset="C-EU" device="C0805" value=".1u"/>
 </parts>
 <sheets>
 <sheet>
@@ -9559,6 +9561,8 @@ Standard schematic elements and footprints for 5mm, 3mm, 1206, and 0603 sized LE
 <text x="198.12" y="-43.18" size="2.54" layer="97">Instrumentation Amplifiers</text>
 <text x="347.98" y="-63.5" size="2.54" layer="97">LCD Connector</text>
 <text x="345.44" y="-22.86" size="2.54" layer="97">Pushbuttons</text>
+<text x="289.56" y="43.18" size="1.778" layer="97">Gain = 5</text>
+<text x="292.1" y="0" size="1.778" layer="97">Gain = 5</text>
 </plain>
 <instances>
 <instance part="JP1" gate="G$1" x="20.32" y="63.5"/>
@@ -9613,6 +9617,8 @@ Standard schematic elements and footprints for 5mm, 3mm, 1206, and 0603 sized LE
 <instance part="R27" gate="G$1" x="381" y="60.96" rot="R180"/>
 <instance part="R28" gate="G$1" x="381" y="27.94" rot="R180"/>
 <instance part="R29" gate="G$1" x="381" y="-7.62" rot="R180"/>
+<instance part="C3" gate="G$1" x="259.08" y="124.46"/>
+<instance part="C4" gate="G$1" x="238.76" y="124.46"/>
 </instances>
 <busses>
 </busses>
@@ -10356,6 +10362,16 @@ Standard schematic elements and footprints for 5mm, 3mm, 1206, and 0603 sized LE
 <wire x1="347.98" y1="5.08" x2="347.98" y2="-5.08" width="0.1524" layer="91"/>
 <label x="340.36" y="0" size="1.778" layer="95"/>
 </segment>
+<segment>
+<pinref part="C4" gate="G$1" pin="2"/>
+<wire x1="238.76" y1="119.38" x2="238.76" y2="116.84" width="0.1524" layer="91"/>
+<label x="236.22" y="114.3" size="1.778" layer="95"/>
+</segment>
+<segment>
+<pinref part="C3" gate="G$1" pin="2"/>
+<wire x1="259.08" y1="119.38" x2="259.08" y2="116.84" width="0.1524" layer="91"/>
+<label x="256.54" y="114.3" size="1.778" layer="95"/>
+</segment>
 </net>
 <net name="3V" class="0">
 <segment>
@@ -10447,6 +10463,11 @@ Standard schematic elements and footprints for 5mm, 3mm, 1206, and 0603 sized LE
 <label x="393.7" y="-7.62" size="1.778" layer="95"/>
 <pinref part="R29" gate="G$1" pin="1"/>
 </segment>
+<segment>
+<pinref part="C4" gate="G$1" pin="1"/>
+<wire x1="238.76" y1="127" x2="238.76" y2="129.54" width="0.1524" layer="91"/>
+<label x="238.76" y="129.54" size="1.778" layer="95"/>
+</segment>
 </net>
 <net name="5V" class="0">
 <segment>
@@ -10518,6 +10539,11 @@ Standard schematic elements and footprints for 5mm, 3mm, 1206, and 0603 sized LE
 <wire x1="299.72" y1="71.12" x2="304.8" y2="71.12" width="0.1524" layer="91"/>
 <junction x="299.72" y="71.12"/>
 <label x="307.34" y="71.12" size="1.778" layer="95"/>
+</segment>
+<segment>
+<pinref part="C3" gate="G$1" pin="1"/>
+<wire x1="259.08" y1="127" x2="259.08" y2="129.54" width="0.1524" layer="91"/>
+<label x="259.08" y="129.54" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="PF9" class="0">
