@@ -10540,11 +10540,6 @@ Standard schematic elements and footprints for 5mm, 3mm, 1206, and 0603 sized LE
 <junction x="299.72" y="71.12"/>
 <label x="307.34" y="71.12" size="1.778" layer="95"/>
 </segment>
-<segment>
-<pinref part="C3" gate="G$1" pin="1"/>
-<wire x1="259.08" y1="127" x2="259.08" y2="129.54" width="0.1524" layer="91"/>
-<label x="259.08" y="129.54" size="1.778" layer="95"/>
-</segment>
 </net>
 <net name="PF9" class="0">
 <segment>
@@ -10660,6 +10655,11 @@ Standard schematic elements and footprints for 5mm, 3mm, 1206, and 0603 sized LE
 <wire x1="114.3" y1="88.9" x2="121.92" y2="88.9" width="0.1524" layer="91"/>
 <label x="119.38" y="88.9" size="1.778" layer="95"/>
 </segment>
+<segment>
+<pinref part="JP2" gate="G$1" pin="12"/>
+<wire x1="160.02" y1="83.82" x2="172.72" y2="83.82" width="0.1524" layer="91"/>
+<label x="165.1" y="83.82" size="1.778" layer="95"/>
+</segment>
 </net>
 <net name="PE2" class="0">
 <segment>
@@ -10707,13 +10707,6 @@ Standard schematic elements and footprints for 5mm, 3mm, 1206, and 0603 sized LE
 <pinref part="U1" gate="G$1" pin="P$89"/>
 <wire x1="114.3" y1="20.32" x2="121.92" y2="20.32" width="0.1524" layer="91"/>
 <label x="119.38" y="20.32" size="1.778" layer="95"/>
-</segment>
-</net>
-<net name="PF5" class="0">
-<segment>
-<pinref part="JP2" gate="G$1" pin="12"/>
-<wire x1="160.02" y1="83.82" x2="172.72" y2="83.82" width="0.1524" layer="91"/>
-<label x="165.1" y="83.82" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="PE1" class="0">
@@ -11363,6 +11356,11 @@ Standard schematic elements and footprints for 5mm, 3mm, 1206, and 0603 sized LE
 <wire x1="200.66" y1="71.12" x2="236.22" y2="71.12" width="0.1524" layer="91"/>
 <wire x1="236.22" y1="71.12" x2="236.22" y2="81.28" width="0.1524" layer="91"/>
 <label x="200.66" y="71.12" size="1.778" layer="95"/>
+</segment>
+<segment>
+<pinref part="C3" gate="G$1" pin="1"/>
+<wire x1="259.08" y1="127" x2="259.08" y2="129.54" width="0.1524" layer="91"/>
+<label x="259.08" y="129.54" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="N$19" class="0">
