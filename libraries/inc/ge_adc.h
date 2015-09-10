@@ -1,13 +1,13 @@
 /*
- * ee152_adc.h
+ * ge_adc.h
 
  *
  *  Created on: Oct 3, 2014
  *      Author: Ned
  */
 
-#ifndef EE152_ADC_H_
-#define EE152_ADC_H_
+#ifndef GE_ADC_H_
+#define GE_ADC_H_
 
 #ifdef __cplusplus
  extern "C" {
@@ -90,4 +90,4 @@ void adc_callback(const int chan, void (*callback)(uint32_t));
 }
 #endif
 
-#endif /* EE152_ADC_H_ */
+#endif /* GE_ADC_H_ */

@@ -1,12 +1,12 @@
 /*
- * ee152_pwm.h
+ * ge_pwm.h
  *
  *  Created on: Oct 19, 2014
  *      Author: Ned
  */
 
-#ifndef EE152_PWM_H_
-#define EE152_PWM_H_
+#ifndef GE_PWM_H_
+#define GE_PWM_H_
 
 #ifdef __cplusplus
  extern "C" {
@@ -38,4 +38,4 @@ void set_pwm_int(int chan, int compare_val);
  }
 #endif
 
-#endif /* EE152_PWM_H_ */
+#endif /* GE_PWM_H_ */

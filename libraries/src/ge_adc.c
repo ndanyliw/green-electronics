@@ -1,11 +1,11 @@
 /*
- * ee152_adc.c
+ * ge_adc.c
  *
  *  Created on: Oct 3, 2014
  *      Author: Ned
  */
 
-#include "ee152_adc.h"
+#include "ge_adc.h"
 
 //globals
 int adc_pin_map[23] = {

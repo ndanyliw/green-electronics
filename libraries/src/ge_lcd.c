@@ -6,7 +6,7 @@
  * @date  09.2015
  */
 
- #include "ee152_lcd.h"
+ #include "ge_lcd.h"
 
 
 /**
