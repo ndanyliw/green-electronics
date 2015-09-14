@@ -1,5 +1,5 @@
 /**
- * @file  ee155_lcd.h
+ * @file  ge_lcd.h
  * @brief EE155 library for interfacing with the class LCD.
  * 
  * Provides a basic interface for the LCD. The LCD uses a HD44780
@@ -10,8 +10,8 @@
  * @date  09.2015
  */
 
- #ifndef _EE155_LCD_H
- #define _EE155_LCD_H
+ #ifndef _GE_LCD_H
+ #define _GE_LCD_H
 
 #ifdef __cplusplus
  extern "C" {
@@ -32,4 +32,4 @@ void lcd_clear(void);
 }
 #endif
 
- #endif
+#endif

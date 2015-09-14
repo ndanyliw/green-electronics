@@ -1,5 +1,5 @@
 /**
- * @file  ee155_lcd.c
+ * @file  ge_lcd.c
  * @brief Source code for EE155 LCD library
  * 
  * @author Ned
