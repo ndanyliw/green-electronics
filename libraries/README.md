@@ -20,7 +20,7 @@ Provides a basic interface for the ADCs on the STM32. There are many modes in wh
 
 ### ge_pwm
 
-PWM library using TIMER0 for generating PWM on its associated channels.
+PWM library using TIMER0 and/or TIMER8 for generating PWM on its associated channels.
 
 ## Resource Usage
 
@@ -36,3 +36,17 @@ Outlined below are the resources used by the Green Electronics libraries. Using/
 | PD6    | ge_lcd    | LCD data pin|
 | PD5    | ge_lcd    | LCD data pin|
 | PD4    | ge_lcd    | LCD data pin|
+| PA8    | ge_pwm    | PWM (5V)    |
+| PA9    | ge_pwm    | PWM (5V)    |
+| PA10   | ge_pwm    | PWM (5V)    |
+| PB0    | ge_pwm    | PWM (5V)    |
+| PB8    | ge_gpio   | GPIO (5V)    |
+| PB9    | ge_gpio   | GPIO (5V)    |
+| PC10   | ge_gpio   | GPIO (5V)    |
+| PC11   | ge_gpio   | GPIO (5V)    |
+| PA1    | ge_adc    | ADC/GPIO    |
+| PA4    | ge_adc    | ADC/GPIO    |
+| PB2    | ge_adc    | ADC/GPIO    |
+| PA2    | ge_adc, ge_uart | ADC/GPIO/TX |
+| PA3    | ge_adc, ge_uart | ADC/GPIO/TX |
+
