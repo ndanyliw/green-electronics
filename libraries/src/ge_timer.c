@@ -10,22 +10,22 @@
 
 
 // private variables
-// keeps track of maximum count before reseting
+/** keeps track of maximum count before reseting */
 uint32_t _ge_tim_max_counter;
-// keep track of number of used timers
+/** keep track of number of used timers */
 int _ge_tim_num_timers;
-// timer counter value
+/** timer counter value */
 uint32_t _ge_tim_count;
-// array of timer periods
+/** array of timer periods */
 uint32_t _ge_tim_periods[_GE_MAX_TIMERS];
-// function array for callbacks
+/** function array for callbacks */
 void (*_ge_tim_callbacks[_GE_MAX_TIMERS])(void);
-// array of timer types (single shot or periodic)
+/** array of timer types (single shot or periodic) */
 int _ge_tim_type[_GE_MAX_TIMERS];
-// array of timer offsets since the callback might
-// be started at a non-zero time making the first period shorter
+/** array of timer offsets since the callback might
+ be started at a non-zero time making the first period shorter */
 int _ge_tim_offsets[_GE_MAX_TIMERS];
-// array of whether the timer is running
+/** array of whether the timer is running */
 bool _ge_tim_state[_GE_MAX_TIMERS];
 
 /**

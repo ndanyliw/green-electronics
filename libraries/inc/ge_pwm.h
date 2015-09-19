@@ -13,6 +13,7 @@
 #endif
 
 // includes
+#include "common.h"
 #include "stm32f30x_tim.h"
 
 //initialize PWM timer (TIMER0)
