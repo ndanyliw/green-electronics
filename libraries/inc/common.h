@@ -21,7 +21,6 @@
 #include "math.h"
 
 
-extern void _delay_ms(__IO uint32_t ms);
-extern void _delay_us(__IO uint32_t us);
+extern void delay_ms(__IO uint32_t ms);
 
 #endif /* COMMON_H_ */
