@@ -9,7 +9,7 @@
 
 #include "ge_system.h"
 
-uint32_t _ge_delay_time;
+__IO uint32_t _ge_delay_time = 0;
 
 /**
  * @brief Initialize dependancies for libraries
@@ -43,5 +43,6 @@ void delay_ms(__IO uint32_t ms) {
  * @details Interrupt handler for the SysTick
  */
 void SysTick_Handler(void) {
-  _ge_delay_time--;
+  if (_ge_delay_time != 0)
+    _ge_delay_time--;
 }

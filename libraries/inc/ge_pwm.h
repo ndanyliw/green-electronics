@@ -16,6 +16,11 @@
 #include "common.h"
 #include "stm32f30x_tim.h"
 
+#define PWM_CHAN1 1
+#define PWM_CHAN2 2
+#define PWM_CHAN3 3
+#define PWM_CHAN4 4
+
 //initialize PWM timer (TIMER0)
 void init_pwm(void);
 

@@ -41,6 +41,8 @@ enum GE_PIN {
   PF0, PF1, PF2, PF4, PF6, PF9, PF10
 };
 
+//only define for compilation of library
+#ifdef GE_LIB
 /** Define appropriate pin number LUT */
 uint16_t _ge_pin_num[] = {
   GPIO_Pin_0, GPIO_Pin_1, GPIO_Pin_2, GPIO_Pin_3, GPIO_Pin_4, GPIO_Pin_5,
@@ -75,7 +77,7 @@ GPIO_TypeDef* _ge_pin_port[] = {
   GPIOE, GPIOE, GPIOE, GPIOE, GPIOE, GPIOE, GPIOE, GPIOE,
   GPIOF, GPIOF, GPIOF, GPIOF, GPIOF, GPIOF, GPIOF
 };
-
+#endif
 
 //Pushbuttons
 #define GE_PBTN1        PD11
@@ -98,6 +100,21 @@ GPIO_TypeDef* _ge_pin_port[] = {
 #define PB9_5V          PB9
 #define PC10_5V         PC10
 #define PC11_5V         PC11
+
+//Discovery board specific pins
+//USER pushbutton
+#define DISC_PBTN       PA0
+
+//LEDs
+#define DISC_LD3        PE9
+#define DISC_LD4        PE8
+#define DISC_LD5        PE10
+#define DISC_LD6        PE15
+#define DISC_LD7        PE11
+#define DISC_LD8        PE14
+#define DISC_LD9        PE12
+#define DISC_LD10       PE13
+
 
 
 
