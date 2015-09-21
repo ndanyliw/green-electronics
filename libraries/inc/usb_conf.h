@@ -35,28 +35,66 @@
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
 /* External variables --------------------------------------------------------*/
+
 /*-------------------------------------------------------------*/
 /* EP_NUM */
 /* defines how many endpoints are used by the device */
 /*-------------------------------------------------------------*/
-#define EP_NUM     (2)
+
+#define EP_NUM        (4)
 
 /*-------------------------------------------------------------*/
 /* --------------   Buffer Description Table  -----------------*/
 /*-------------------------------------------------------------*/
-/* buffer table base address */
+
+/*
+
+
+As for your other question: packet memory is also used to store buffer description table. Depending on number and type of used endpoints you need to reserve enough space, for example:
+
+PMAAddr + BASEADDR_BTABLE + 0x00000000 : EP0_TX_ADDR
+PMAAddr + BASEADDR_BTABLE + 0x00000002 : EP0_TX_COUNT
+PMAAddr + BASEADDR_BTABLE + 0x00000004 : EP0_RX_ADDR
+PMAAddr + BASEADDR_BTABLE + 0x00000006 : EP0_RX_COUNT
+PMAAddr + BASEADDR_BTABLE + 0x00000008 : EP1_TX_ADDR
+PMAAddr + BASEADDR_BTABLE + 0x0000000A : EP1_TX_COUNT
+PMAAddr + BASEADDR_BTABLE + 0x0000000C : EP1_RX_ADDR
+PMAAddr + BASEADDR_BTABLE + 0x0000000E : EP1_RX_COUNT
+PMAAddr + BASEADDR_BTABLE + 0x00000010 : EP2_TX_ADDR
+PMAAddr + BASEADDR_BTABLE + 0x00000012 : EP2_TX_COUNT
+PMAAddr + BASEADDR_BTABLE + 0x00000014 : EP2_RX_ADDR
+PMAAddr + BASEADDR_BTABLE + 0x00000016 : EP2_RX_COUNT
+
+and in such case we get 0x18 address for endpoint 0 transmission buffer.
+You can find more details in the reference manual
+
+
+*/
+
 /* buffer table base address */
 #define BTABLE_ADDRESS      (0x00)
 
+
+
+/*
+ *
+ * Every device must have endpoint zero configured as a control endpoint. There’s
+rarely if ever a need for additional control endpoints.
+ *
+ */
+
+
+
 /* EP0  */
 /* rx/tx buffer base address */
-#define ENDP0_RXADDR        (0x18)
-#define ENDP0_TXADDR        (0x58)
+#define ENDP0_RXADDR        (0x40)
+#define ENDP0_TXADDR        (0x80)
 
 /* EP1  */
 /* tx buffer base address */
-#define ENDP1_TXADDR        (0x100)
-
+#define ENDP1_TXADDR        (0xC0)
+#define ENDP2_TXADDR        (0x100)
+#define ENDP3_RXADDR        (0x110)
 
 /*-------------------------------------------------------------*/
 /* -------------------   ISTR events  -------------------------*/
@@ -79,7 +117,7 @@
 
 #define  EP1_OUT_Callback   NOP_Process
 #define  EP2_OUT_Callback   NOP_Process
-#define  EP3_OUT_Callback   NOP_Process
+//#define  EP3_OUT_Callback   NOP_Process
 #define  EP4_OUT_Callback   NOP_Process
 #define  EP5_OUT_Callback   NOP_Process
 #define  EP6_OUT_Callback   NOP_Process
