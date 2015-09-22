@@ -34,7 +34,7 @@ bool _ge_tim_state[_GE_MAX_TIMERS];
  * set up the appropriate interrupts.
  * @return 0 on success, -1 on failure
  */
-int initialize_timer() {
+int timer_init() {
   _ge_tim_max_counter = 0;
   _ge_tim_num_timers = 0;
   _ge_tim_count = 0;
@@ -85,7 +85,7 @@ int initialize_timer() {
  * else.
  * @return 0 on success
  */
-int deinit_timer() {
+int timer_deinit() {
   NVIC_DisableIRQ(TIM3_IRQn);
   TIM_ITConfig(TIM3, TIM_IT_Update, DISABLE);
   TIM_Cmd(TIM3, DISABLE);
@@ -105,7 +105,7 @@ int deinit_timer() {
  * @param type SINGLE_SHOT or PERIODIC
  * @return Timer ID of associate timer or error code.
  */
-timer_id_t register_timer(uint32_t ms, void (*function)(void), uint8_t type) {
+timer_id_t timer_register(uint32_t ms, void (*function)(void), uint8_t type) {
   //check if there are less than the max number of timers registered
   if (_ge_tim_num_timers == _GE_MAX_TIMERS)
     return _GE_TIM_ERROR;
@@ -132,7 +132,7 @@ timer_id_t register_timer(uint32_t ms, void (*function)(void), uint8_t type) {
  * @param timer ID of the timer to start
  * @return 0 on success
  */
-int start_timer(timer_id_t timer) {
+int timer_start(timer_id_t timer) {
   _ge_tim_state[timer] = true;
   _ge_tim_offsets[timer] = _ge_tim_count;
 
@@ -149,7 +149,7 @@ int start_timer(timer_id_t timer) {
  * @param timer ID of the timer to stop and remove
  * @return 0 on success
  */
-int stop_timer(timer_id_t timer) {
+int timer_stop(timer_id_t timer) {
   _ge_tim_state[timer] = false;
   _ge_tim_offsets[timer] = 0;
   _ge_tim_periods[timer] = 0;

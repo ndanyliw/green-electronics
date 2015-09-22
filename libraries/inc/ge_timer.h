@@ -44,11 +44,11 @@ typedef int timer_id_t;
 
 
 // public interface functions
-int initialize_timer();
-int deinit_timer();
-timer_id_t register_timer(uint32_t ms, void (*function)(void), uint8_t type);
-int start_timer(timer_id_t timer);
-int stop_timer(timer_id_t timer);
+int timer_init();
+int timer_deinit();
+timer_id_t timer_register(uint32_t ms, void (*function)(void), uint8_t type);
+int timer_start(timer_id_t timer);
+int timer_stop(timer_id_t timer);
 
 
 #ifdef __cplusplus
