@@ -9,6 +9,7 @@
 
 #include "ge_vcom.h"
 
+#include <string.h>
 
 /**
  * @brief Initialize the VCOM interface
@@ -22,7 +23,9 @@ void vcom_init() {
 
   USB_Init();
 
-  while ((bDeviceState != CONFIGURED)&&(USBConnectTimeOut != 0))
+  _ge_usb_timeout = 100;
+
+  while ((bDeviceState != CONFIGURED) && (_ge_usb_timeout != 0))
   {}
 
   //initialize positions
@@ -46,7 +49,7 @@ void vcom_send(char *data) {
   uint8_t str_len = strlen(data);
 
   //send data
-  CDC_Send_DATA(data, str_len);
+  CDC_Send_DATA((uint8_t *)data, str_len);
 }
 
 /**
@@ -91,5 +94,26 @@ void vcom_reset() {
  */
 uint16_t vcom_available() {
   return (uint8_t) _vcom_buf_available;
+}
+
+//Interrupt handlers
+#if defined (USB_INT_DEFAULT)
+void USB_LP_CAN1_RX0_IRQHandler(void)
+#elif defined (USB_INT_REMAP)
+void USB_LP_IRQHandler(void)
+#endif
+{
+   USB_Istr();
+}
+
+#if defined (USB_INT_DEFAULT)
+void USBWakeUp_IRQHandler(void)
+#elif defined (USB_INT_REMAP)
+void USBWakeUp_RMP_IRQHandler(void)
+#endif
+{
+  /* Initiate external resume sequence (1 step) */
+  Resume(RESUME_EXTERNAL);  
+  EXTI_ClearITPendingBit(EXTI_Line18);
 }
 

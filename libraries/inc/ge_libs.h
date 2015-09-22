@@ -11,7 +11,7 @@
  #include "ge_gpio.h"
  #include "ge_lcd.h"
  #include "ge_pins.h"
- // #include "ge_print.h"
+ #include "ge_vcom.h"
  #include "ge_pwm.h"
  #include "ge_system.h"
  #include "ge_timer.h"

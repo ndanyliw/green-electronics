@@ -34,6 +34,13 @@
 #include "stm32f30x.h"
 
 
+//__IO uint32_t Receive_length;
+
+__IO uint8_t Receive_Buffer[64];
+uint32_t Send_length;
+
+
+
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
@@ -55,9 +62,10 @@ void Enter_LowPowerMode(void);
 void Leave_LowPowerMode(void);
 void USB_Interrupts_Config(void);
 void USB_Cable_Config (FunctionalState NewState);
-void Joystick_Send(uint8_t Keys);
-uint8_t JoyState(void);
+
 void Get_SerialNum(void);
+uint32_t CDC_Send_DATA (uint8_t *ptrBuffer, uint8_t Send_length);
+uint32_t CDC_Receive_DATA(void);
 
 
 #endif  /*__HW_CONFIG_H*/

@@ -32,6 +32,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include <stdint.h>
+#include <stdbool.h>
 #include "stm32f30x.h"
 #include "usb_core.h"
 /* Exported types ------------------------------------------------------------*/

@@ -34,6 +34,7 @@
 #include <stdint.h>
 #include "stm32f30x.h"
 #include "usb_core.h"
+#include "usb_sil.h"
 /* Exported types ------------------------------------------------------------*/
 typedef struct
 {

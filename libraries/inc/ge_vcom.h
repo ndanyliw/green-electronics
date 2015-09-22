@@ -25,9 +25,12 @@
 #include "usb_pwr.h"
 #include "platform_config.h"
 #include "math.h"
+#include "usb_istr.h"
 
 
 //Private variables
+//Only define if compiling library
+#ifdef GE_LIB
 /** Position of buffer head (what the user would read) */
 __IO uint8_t _vcom_buf_head = 0;
 /** Position of the buffer tail (where to store the next received char) */
@@ -38,7 +41,12 @@ __IO uint8_t _vcom_buf_corrupt = 0;
 __IO char _vcom_buf[256];
 /** Number of available bytes in the buffer */
 __IO uint16_t _vcom_buf_available;
+/** Packet sent flag */
+uint32_t packet_sent=1;
+#endif
 
+extern  __IO uint32_t bDeviceState; /* USB device status */
+extern  __IO uint32_t _ge_usb_timeout;
 
 //Exported functions
 void vcom_init();
@@ -48,7 +56,11 @@ char vcom_read();
 bool vcom_corrupt();
 void vcom_reset();
 
-
+//Interrupt handlers
+void USB_LP_CAN1_RX0_IRQHandler(void);
+void USB_LP_IRQHandler(void);
+void USBWakeUp_IRQHandler(void);
+void USBWakeUp_RMP_IRQHandler(void);
 
 #ifdef __cplusplus
  }

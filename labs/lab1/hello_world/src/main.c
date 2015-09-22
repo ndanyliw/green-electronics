@@ -72,6 +72,10 @@ int main(void)
   // lcd_goto(0, 0);
   // lcd_puts("Hello, World!");
 
+  //Initialize VCOM
+  vcom_init();
+  vcom_send("Hello, World!\n");
+
   /* Infinite loop */
   /**
    * Flashes the ring of LEDs. If the user button is
@@ -88,6 +92,8 @@ int main(void)
       /* LEDs Off */
       led_on();
       delay_ms(500); /*500ms - half second*/
+
+      vcom_send("Hi\n");
     } else {
       /* LEDs Off */
       led_off();

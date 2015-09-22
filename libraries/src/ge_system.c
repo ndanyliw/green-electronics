@@ -10,6 +10,7 @@
 #include "ge_system.h"
 
 __IO uint32_t _ge_delay_time = 0;
+__IO uint32_t _ge_usb_timeout = 100;
 
 /**
  * @brief Initialize dependancies for libraries
@@ -45,4 +46,6 @@ void delay_ms(__IO uint32_t ms) {
 void SysTick_Handler(void) {
   if (_ge_delay_time != 0)
     _ge_delay_time--;
+
+  _ge_usb_timeout--;
 }
