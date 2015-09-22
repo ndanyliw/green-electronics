@@ -42,8 +42,14 @@
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 extern __IO uint32_t packet_sent;
-extern __IO uint32_t packet_receive;
+// extern __IO uint32_t packet_receive;
 extern __IO uint8_t Receive_Buffer[64];
+extern __IO uint8_t _vcom_buf_head;
+extern __IO uint8_t _vcom_buf_tail;
+extern __IO uint8_t _vcom_buf_corrupt;
+extern __IO char _vcom_buf[256];
+extern __IO uint16_t _vcom_buf_available;
+
 uint32_t Receive_length;
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
@@ -70,9 +76,22 @@ void EP1_IN_Callback (void)
 *******************************************************************************/
 void EP3_OUT_Callback(void)
 {
-  packet_receive = 1;
   Receive_length = GetEPRxCount(ENDP3);
   PMAToUserBufferCopy((unsigned char*)Receive_Buffer, ENDP3_RXADDR, Receive_length);
+
+  for (int i = 0; i < Receive_length; i++) {
+    _vcom_buf[_vcom_buf_tail++] = Receive_Buffer[i];
+    _vcom_buf_available++;
+  }
+
+  //check if buffer corrupted
+  if (_vcom_buf_available > 256) {
+    _vcom_buf_available = 256;
+    _vcom_buf_corrupt = 1;
+  }
+
+  //Reenable receive endpoint
+  SetEPRxValid(ENDP3);
 }
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
