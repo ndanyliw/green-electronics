@@ -10,7 +10,7 @@
 int _ge_pwm_period;
 
 //initialize PWM timer (TIMER0)
-void init_pwm(void) {
+void pwm_init(void) {
   _ge_pwm_period = 65535;
 
   TIM_TimeBaseInitTypeDef TIM_TimeBase_InitStructure;
@@ -66,7 +66,7 @@ void init_pwm(void) {
 }
 
 //enable pwm channel
-void enable_pwm_chan(int chan) {
+void pwm_enable_chan(int chan) {
   GPIO_InitTypeDef GPIO_InitStructure;
 
   RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
@@ -98,16 +98,17 @@ void enable_pwm_chan(int chan) {
 }
 
 //set pwm count (16 bit unsigned)
-void set_pwm(int chan, float duty) {
+void pwm_set(int chan, float duty) {
   int compare_val = (int)(duty*(float)_ge_pwm_period);
   set_pwm_int(chan,compare_val);
 }
-int get_max_pwm_int()
+
+int pwm_get_max_int()
 {
 	return _ge_pwm_period;
 }
 
-void set_pwm_int(int chan, int compare_val)
+void pwm_set_int(int chan, int compare_val)
 {
 	 switch(chan) {
 	    case 1:
@@ -129,7 +130,7 @@ void set_pwm_int(int chan, int compare_val)
 }
 
 //set pwm frequency (returns the actual frequency the pwm wave is set to)
-float set_pwm_freq(float freq) {
+float pwm_freq(float freq) {
   float base_freq = 72000000.0; //arm clock frequency
   float actual_freq = 0.0;
 
