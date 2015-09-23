@@ -73,6 +73,7 @@ all: lib proj
 
 lib:
 	$(MAKE) -C $(STD_PERIPH_LIB)
+	$(MAKE)	-C $(EE155_LIB)
 
 proj: 	$(PROJ_NAME).elf
 
@@ -84,7 +85,7 @@ objs/%.o : src/%.c dirs
 	$(CC) $(CFLAGS) -c -o $@ $< -MMD -MF deps/$(*F).d
 
 $(PROJ_NAME).elf: $(OBJS)
-	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@ $(STARTUP) -L$(STD_PERIPH_LIB) -lstm32f3 -L$(LDSCRIPT_INC) -Tstm32f3.ld
+	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@ $(STARTUP) -L$(STD_PERIPH_LIB) -L$(EE155_LIB) -lstm32f3 -lge -L$(LDSCRIPT_INC) -Tstm32f3.ld
 	$(OBJCOPY) -O ihex $(PROJ_NAME).elf $(PROJ_NAME).hex
 	$(OBJCOPY) -O binary $(PROJ_NAME).elf $(PROJ_NAME).bin
 	$(OBJDUMP) -St $(PROJ_NAME).elf >$(PROJ_NAME).lst

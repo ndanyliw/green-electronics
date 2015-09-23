@@ -127,11 +127,11 @@ Special Note(s) : NONE
 #define hd44780_EN_On()		            GPIO_WriteBit(HD44780_CONTROLPORT, HD44780_EN_BIT, Bit_SET)
 #define hd44780_EN_Off()	            GPIO_WriteBit(HD44780_CONTROLPORT, HD44780_EN_BIT, Bit_RESET)
 
-#define hd44780_EN_high_delay()     	_delay_ms(2)//4095)
-#define hd44780_init_delay()        	_delay_ms(16)	//16ms
-#define hd44780_init_delay2()       	_delay_ms(5)	//5ms
-#define hd44780_init_delay3()       	_delay_ms(1)	//1ms
-#define hd44780_init_end_delay()    	_delay_ms(2)	//2ms
+#define hd44780_EN_high_delay()     	delay_ms(2)//4095)
+#define hd44780_init_delay()        	delay_ms(16)	//16ms
+#define hd44780_init_delay2()       	delay_ms(5)	//5ms
+#define hd44780_init_delay3()       	delay_ms(1)	//1ms
+#define hd44780_init_end_delay()    	delay_ms(2)	//2ms
 
 #define hd44780_clear()                       	  hd44780_wr_cmd( HD44780_CMD_CLEAR )
 #define hd44780_home()                        	  hd44780_wr_cmd( HD44780_CMD_RETURN_HOME )
