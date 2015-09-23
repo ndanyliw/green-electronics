@@ -55,6 +55,7 @@ uint16_t vcom_available();
 char vcom_read();
 bool vcom_corrupt();
 void vcom_reset();
+void vcom_check_conn();
 
 //Interrupt handlers
 void USB_LP_CAN1_RX0_IRQHandler(void);

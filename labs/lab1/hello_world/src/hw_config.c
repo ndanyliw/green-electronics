@@ -125,7 +125,7 @@ void Set_System(void)
   EXTI_InitStructure.EXTI_LineCmd = ENABLE;
   EXTI_Init(&EXTI_InitStructure);
  
-  EXTI_ClearITPendingBit(USER_BUTTON_EXTI_LINE);
+  // EXTI_ClearITPendingBit(USER_BUTTON_EXTI_LINE);
 }
 
 /**
