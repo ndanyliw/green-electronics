@@ -68,13 +68,13 @@ int main(void)
   lcd_init();
 
   // //Print Hello World
-  // lcd_clear();
-  // lcd_goto(0, 0);
-  // lcd_puts("Hello, World!");
+  lcd_clear();
+  lcd_goto(0, 0);
+  lcd_puts("Hello, World!");
 
   //Initialize VCOM
-  vcom_init();
-  vcom_send("Hello, World!\n");
+  // vcom_init();
+  // vcom_send("Hello, World!\n");
 
   /* Infinite loop */
   /**
@@ -93,7 +93,7 @@ int main(void)
       led_on();
       delay_ms(500); /*500ms - half second*/
 
-      vcom_send("Hi\n");
+      // vcom_send("Hi\n");
     } else {
       /* LEDs Off */
       led_off();
