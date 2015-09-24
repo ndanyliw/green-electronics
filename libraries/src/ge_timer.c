@@ -74,6 +74,8 @@ int timer_init() {
 
   //enable counter
   TIM_Cmd(TIM3, ENABLE);
+
+  return 0;
 }
 
 
@@ -90,6 +92,8 @@ int timer_deinit() {
   TIM_ITConfig(TIM3, TIM_IT_Update, DISABLE);
   TIM_Cmd(TIM3, DISABLE);
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, DISABLE);
+
+  return 0;
 }
 
 
@@ -123,6 +127,8 @@ timer_id_t timer_register(uint32_t ms, void (*function)(void), uint8_t type) {
       return i; //return timer id
     }
   }
+
+  return _GE_TIM_ERROR;
 }
 
 /**
@@ -155,6 +161,8 @@ int timer_stop(timer_id_t timer) {
   _ge_tim_periods[timer] = 0;
   _ge_tim_callbacks[timer] = NULL;
   _ge_tim_num_timers--;
+
+  return 0;
 }
 
 

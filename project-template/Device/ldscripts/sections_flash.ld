@@ -38,6 +38,13 @@ SECTIONS
 	    /* This is used by the startup in order to initialize the .data section */
         _sidata = _etext;
     } >FLASH
+
+    /* .ARM.exidx is sorted, so has to go in its own output section.*/
+   .ARM.exidx : {
+        __exidx_start = .;
+        *(.ARM.exidx* .gnu.linkonce.armexidx.*)
+        __exidx_end = .;
+    } >rom
     
     /* This is the initialized data section
     The program executes knowing that the data is in the RAM
@@ -78,9 +85,6 @@ SECTIONS
     
     PROVIDE ( end = _ebss );
     PROVIDE ( _end = _ebss );
-    
-    __exidx_start = .;
-    __exidx_end = .;
     
     /* after that it's only debugging information. */
     
