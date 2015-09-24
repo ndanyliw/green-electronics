@@ -30,3 +30,13 @@ For convenience we have the most used datasheets when developing for the STM32F3
 ## Hardware
 
 For reference the hardware designs used in this class are included.
+
+## Labs
+
+In the `labs` folder you will find starter code for the various labs.
+
+## init_bitbucket
+
+Included in the repository is an `init_bitbucket.sh` script. This file is included to automate the process of mapping the repository to a new, private repository hosted by bitbucket. Before running this script, you need to have created a bitbucket account. After execution, you will have initialized a new private repo and `git push` and `git pull` will be mapped there by default.
+
+To pull the latest patches (which should be done at least once before starting a new lab) run `git pull upstream master`.
