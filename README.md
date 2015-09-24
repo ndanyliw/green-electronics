@@ -13,7 +13,7 @@ The tools will be installed in `~/ee155_tools` and you must run `source ~/ee155_
 
 The template is adapted from mblythe86's F3 template: https://github.com/mblythe86/stm32f3-discovery-basic-template. This template provides an easy starter project that can take advantage of the standard libraries provided by STMicroelectronics and interface with a simple Makefile.
 
-When starting a new project simply copy the template into a new folder with the following command `cp -r project-template my-new-project-name` and begin development.
+When starting a new project simply copy the template into a new folder with the following command `cp -r project-template my-new-project-name` and begin development. Depending on where you copy the project folder, you may need to modify the `EE155_LIB` parameter in the `Makefile`. Make sure that it points to the `libraries` folder.
 
 The included Makefile will automatically detect all C source code in the `inc` and `src` directories. To compile the project run `make all`. Likewise to program the board, run `make program`. Additionally, the STM32F3 has the option to run GDB remotely on the board allowing you to interactively debug your code on the processor. Run `make debug` to program the board and launch GDB.
 
