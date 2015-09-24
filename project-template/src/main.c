@@ -1,25 +1,50 @@
-#include "stm32f30x.h"
-#include "stm32f3_discovery.h"
-
-/* Private variables ---------------------------------------------------------*/
-  RCC_ClocksTypeDef RCC_Clocks;
-__IO uint32_t TimingDelay = 0;
-
-/* Private function prototypes -----------------------------------------------*/
-void TimingDelay_Decrement(void);
-void Delay(__IO uint32_t nTime);
-
-/* Private functions ---------------------------------------------------------*/
-
 /**
-  * @brief  This function handles SysTick Handler.
-  * @param  None
-  * @retval None
-  */
-void SysTick_Handler(void)
-{
-  TimingDelay_Decrement();
+ * @file  main.c
+ * @brief Hello World demo for the Green Electronics libraries.
+ * 
+ * @details Prints "Hello World" on the LCD and blinks the onboard
+ * LEDs
+ * 
+ * @author Ned Danyliw
+ * @date  09.2015
+ */
+#include "ge_libs.h"
+
+
+void setup_led_gpio() {
+  //Initialize LED pins and set as outputs
+  gpio_setup_pin(DISC_LD3, GPIO_OUTPUT, false, false);
+  gpio_setup_pin(DISC_LD4, GPIO_OUTPUT, false, false);
+  gpio_setup_pin(DISC_LD5, GPIO_OUTPUT, false, false);
+  gpio_setup_pin(DISC_LD6, GPIO_OUTPUT, false, false);
+  gpio_setup_pin(DISC_LD7, GPIO_OUTPUT, false, false);
+  gpio_setup_pin(DISC_LD8, GPIO_OUTPUT, false, false);
+  gpio_setup_pin(DISC_LD9, GPIO_OUTPUT, false, false);
+  gpio_setup_pin(DISC_LD10, GPIO_OUTPUT, false, false);
 }
+
+void led_off() {
+  gpio_write_pin(DISC_LD3, GPIO_LOW);
+  gpio_write_pin(DISC_LD4, GPIO_LOW);
+  gpio_write_pin(DISC_LD5, GPIO_LOW);
+  gpio_write_pin(DISC_LD6, GPIO_LOW);
+  gpio_write_pin(DISC_LD7, GPIO_LOW);
+  gpio_write_pin(DISC_LD8, GPIO_LOW);
+  gpio_write_pin(DISC_LD9, GPIO_LOW);
+  gpio_write_pin(DISC_LD10, GPIO_LOW);
+}
+
+void led_on() {
+  gpio_write_pin(DISC_LD3, GPIO_HIGH);
+  gpio_write_pin(DISC_LD4, GPIO_HIGH);
+  gpio_write_pin(DISC_LD5, GPIO_HIGH);
+  gpio_write_pin(DISC_LD6, GPIO_HIGH);
+  gpio_write_pin(DISC_LD7, GPIO_HIGH);
+  gpio_write_pin(DISC_LD8, GPIO_HIGH);
+  gpio_write_pin(DISC_LD9, GPIO_HIGH);
+  gpio_write_pin(DISC_LD10, GPIO_HIGH);
+}
+
 
 /**
   * @brief  Main program.
@@ -28,72 +53,62 @@ void SysTick_Handler(void)
   */
 int main(void)
 {  
-  /* SysTick end of count event each 10ms */
-  RCC_GetClocksFreq(&RCC_Clocks);
-  SysTick_Config(RCC_Clocks.HCLK_Frequency / 100);
-  
-  /* Initialize LEDs and User Button available on STM32F3-Discovery board */
-  STM_EVAL_LEDInit(LED3);
-  STM_EVAL_LEDInit(LED4);
-  STM_EVAL_LEDInit(LED5);
-  STM_EVAL_LEDInit(LED6);
-  STM_EVAL_LEDInit(LED7);
-  STM_EVAL_LEDInit(LED8);
-  STM_EVAL_LEDInit(LED9);
-  STM_EVAL_LEDInit(LED10);
-   
+  //Initialize library
+  ge_init();
+
+  //Initialize GPIO
+  gpio_init();
+
+  setup_led_gpio();
+
+  //Initialize the USER button as an input
+  gpio_setup_pin(DISC_PBTN, GPIO_INPUT, false, false);
+
+  //Initialize LCD
+  lcd_init();
+
+  // //Print Hello World
+  lcd_clear();
+  lcd_goto(0, 0);
+  lcd_puts("Hello, World!");
+
+  // timer_init();
+
+  //Initialize VCOM
+  // vcom_init();
+  // vcom_send("Hello, World!\n");
+
   /* Infinite loop */
-  while (1)
-  {   
-    /* LEDs Off */
-    STM_EVAL_LEDOff(LED3);
-    STM_EVAL_LEDOff(LED6);
-    STM_EVAL_LEDOff(LED7);
-    STM_EVAL_LEDOff(LED4);
-    STM_EVAL_LEDOff(LED10);
-    STM_EVAL_LEDOff(LED8);
-    STM_EVAL_LEDOff(LED9);
-    STM_EVAL_LEDOff(LED5);
-    
-    Delay(50); /*500ms - half second*/
-    
-    /* LEDs Off */
-    STM_EVAL_LEDOn(LED3);
-    STM_EVAL_LEDOn(LED6);
-    STM_EVAL_LEDOn(LED7);
-    STM_EVAL_LEDOn(LED4);
-    STM_EVAL_LEDOn(LED10);
-    STM_EVAL_LEDOn(LED8);
-    STM_EVAL_LEDOn(LED9);
-    STM_EVAL_LEDOn(LED5);
-    
-    Delay(50); /*500ms - half second*/
+  /**
+   * Flashes the ring of LEDs. If the user button is
+   * depressed, it will switch to pulsing the buttons with
+   * PWM.
+   */
+  while (1) {   
+    //check if button depressed
+    if (!gpio_read_pin(DISC_PBTN)) {
+      /* LEDs Off */
+      led_off();
+      delay_ms(500); /*500ms - half second*/
+      
+      /* LEDs Off */
+      led_on();
+      delay_ms(500); /*500ms - half second*/
+
+      // vcom_send("Hi\n");
+    } else {
+      /* LEDs Off */
+      led_off();
+      delay_ms(100); /*500ms - half second*/
+      
+      /* LEDs Off */
+      led_on();
+      delay_ms(100); /*500ms - half second*/
+    }
   }
 }
-/**
-  * @brief  Inserts a delay time.
-  * @param  nTime: specifies the delay time length, in 10 ms.
-  * @retval None
-  */
-void Delay(__IO uint32_t nTime)
-{
-  TimingDelay = nTime;
 
-  while(TimingDelay != 0);
-}
 
-/**
-  * @brief  Decrements the TimingDelay variable.
-  * @param  None
-  * @retval None
-  */
-void TimingDelay_Decrement(void)
-{
-  if (TimingDelay != 0x00)
-  { 
-    TimingDelay--;
-  }
-}
 
 #ifdef  USE_FULL_ASSERT
 

@@ -44,7 +44,7 @@ SECTIONS
         __exidx_start = .;
         *(.ARM.exidx* .gnu.linkonce.armexidx.*)
         __exidx_end = .;
-    } >rom
+    } >FLASH
     
     /* This is the initialized data section
     The program executes knowing that the data is in the RAM
