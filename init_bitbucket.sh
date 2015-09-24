@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # copybitbucket - creates remote bitbucket repo and adds it as git remote to cwd
 
     echo 'Username?'
