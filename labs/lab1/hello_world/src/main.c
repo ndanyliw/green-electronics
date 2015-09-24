@@ -72,6 +72,8 @@ int main(void)
   lcd_goto(0, 0);
   lcd_puts("Hello, World!");
 
+  // timer_init();
+
   //Initialize VCOM
   // vcom_init();
   // vcom_send("Hello, World!\n");
