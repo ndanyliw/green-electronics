@@ -27,7 +27,7 @@
 //Defines
 #define _GE_MAX_TIMERS 16
 //minimum time step for timer (1 ms)
-#define _GE_TIM_PERIOD 72000
+#define _GE_TIM_PERIOD 720000
 //error code if timer fails to initialize
 #define _GE_TIM_ERROR -1
 
