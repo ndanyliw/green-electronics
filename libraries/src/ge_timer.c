@@ -11,22 +11,22 @@
 
 // private variables
 /** keeps track of maximum count before reseting */
-uint32_t _ge_tim_max_counter;
+__IO uint32_t _ge_tim_max_counter;
 /** keep track of number of used timers */
-int _ge_tim_num_timers;
+__IO int _ge_tim_num_timers;
 /** timer counter value */
-uint32_t _ge_tim_count;
+__IO uint32_t _ge_tim_count;
 /** array of timer periods */
-uint32_t _ge_tim_periods[_GE_MAX_TIMERS];
+__IO uint32_t _ge_tim_periods[_GE_MAX_TIMERS];
 /** function array for callbacks */
-void (*_ge_tim_callbacks[_GE_MAX_TIMERS])(void);
+__IO void (*_ge_tim_callbacks[_GE_MAX_TIMERS])(void);
 /** array of timer types (single shot or periodic) */
-int _ge_tim_type[_GE_MAX_TIMERS];
+__IO int _ge_tim_type[_GE_MAX_TIMERS];
 /** array of timer offsets since the callback might
  be started at a non-zero time making the first period shorter */
-int _ge_tim_offsets[_GE_MAX_TIMERS];
+__IO int _ge_tim_offsets[_GE_MAX_TIMERS];
 /** array of whether the timer is running */
-bool _ge_tim_state[_GE_MAX_TIMERS];
+__IO bool _ge_tim_state[_GE_MAX_TIMERS];
 
 /**
  * @brief Initialize TIM3 to use for timing interrupts
@@ -69,11 +69,13 @@ int timer_init() {
   NVIC_init_struct.NVIC_IRQChannelCmd = ENABLE;
   NVIC_Init(&NVIC_init_struct);
 
+  //enable counter
+  TIM_Cmd(TIM3, ENABLE);
+
   //enable timer update interrupt
   TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
 
-  //enable counter
-  TIM_Cmd(TIM3, ENABLE);
+  return 0;
 }
 
 
@@ -90,6 +92,8 @@ int timer_deinit() {
   TIM_ITConfig(TIM3, TIM_IT_Update, DISABLE);
   TIM_Cmd(TIM3, DISABLE);
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, DISABLE);
+
+  return 0;
 }
 
 
@@ -123,6 +127,8 @@ timer_id_t timer_register(uint32_t ms, void (*function)(void), uint8_t type) {
       return i; //return timer id
     }
   }
+
+  return _GE_TIM_ERROR;
 }
 
 /**
@@ -155,6 +161,8 @@ int timer_stop(timer_id_t timer) {
   _ge_tim_periods[timer] = 0;
   _ge_tim_callbacks[timer] = NULL;
   _ge_tim_num_timers--;
+
+  return 0;
 }
 
 
@@ -165,30 +173,32 @@ int timer_stop(timer_id_t timer) {
  * whether a timer function should be called.
  */
 void TIM3_IRQHandler() {
-  if (_ge_tim_num_timers == 0)
-    return; //no registered callbacks
-  
-  //check if should call one of the registered callbacks
-  _ge_tim_count++;
-  for (int i = 0; i < _GE_MAX_TIMERS; i++) {
-    if (_ge_tim_state[i] 
-        && _ge_tim_periods[i] != 0 
-        && (((int64_t)_ge_tim_count - _ge_tim_offsets[i]) % _ge_tim_periods[i]) == 0
-        && ((int64_t)_ge_tim_count - _ge_tim_offsets[i]) != 0) {
-      //check if single shot
-      if (_ge_tim_type[i] == GE_SINGLESHOT) {
-        _ge_tim_state[i] = false;
-        _ge_tim_offsets[i] = 0;
-        _ge_tim_periods[i] = 0;
-
-        (*_ge_tim_callbacks[i])(); //call appropriate callback
-
-        _ge_tim_callbacks[i] = NULL;
-      } else {
-        (*_ge_tim_callbacks[i])(); //call appropriate callback        
-      }
+  if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET) {
+    if (_ge_tim_num_timers != 0) {
       
+      //check if should call one of the registered callbacks
+      _ge_tim_count++;
+      for (int i = 0; i < _GE_MAX_TIMERS; i++) {
+        if (_ge_tim_state[i] 
+            && _ge_tim_periods[i] != 0 
+            && (((int64_t)_ge_tim_count - _ge_tim_offsets[i]) % _ge_tim_periods[i]) == 0
+            && ((int64_t)_ge_tim_count - _ge_tim_offsets[i]) != 0) {
+          //check if single shot
+          if (_ge_tim_type[i] == GE_SINGLESHOT) {
+            _ge_tim_state[i] = false;
+            _ge_tim_offsets[i] = 0;
+            _ge_tim_periods[i] = 0;
+
+            (*_ge_tim_callbacks[i])(); //call appropriate callback
+
+            _ge_tim_callbacks[i] = NULL;
+          } else {
+            (*_ge_tim_callbacks[i])(); //call appropriate callback        
+          }
+          
+        }
+      }
     }
+    TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
   }
 }
-

@@ -114,8 +114,8 @@ void Set_System(void)
   GPIO_Init(USB_DISCONNECT, &GPIO_InitStructure);  
 #endif /* USB_USE_EXTERNAL_PULLUP */
   
-  /* Configure the Key button in EXTI mode */
-  STM_EVAL_PBInit(BUTTON_USER, BUTTON_MODE_EXTI);
+  // /* Configure the Key button in EXTI mode */
+  // STM_EVAL_PBInit(BUTTON_USER, BUTTON_MODE_EXTI);
   
   /* Configure the EXTI line 18 connected internally to the USB IP */
   EXTI_ClearITPendingBit(EXTI_Line18);
@@ -125,7 +125,7 @@ void Set_System(void)
   EXTI_InitStructure.EXTI_LineCmd = ENABLE;
   EXTI_Init(&EXTI_InitStructure);
  
-  EXTI_ClearITPendingBit(USER_BUTTON_EXTI_LINE);
+  // EXTI_ClearITPendingBit(USER_BUTTON_EXTI_LINE);
 }
 
 /**
