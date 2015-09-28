@@ -8,12 +8,7 @@
 
 #include "ge_libs.h"
 
-//Constants
-#define V_PER_DIV 0.000732422
-//may need to change I_PER_DIV
-#define I_PER_DIV 0.000732422
-
-//Calibration Voltage in volts
+//Calibration Voltage in volts (Adjust to your values)
 #define CAL_VOLTS 10.0
 #define CAL_CURR  3.0
 
