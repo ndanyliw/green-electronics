@@ -16,14 +16,29 @@
 #include "common.h"
 #include "stm32f30x_tim.h"
 
+// macros
+#define IS_PWM_PIN(PIN)            (((PIN) == PA8) || \
+                                    ((PIN) == PA9) || \
+                                    ((PIN) == PA10) || \
+                                    ((PIN) == PA11) || \
+                                    ((PIN) == PE9) || \
+                                    ((PIN) == PE11) || \
+                                    ((PIN) == PE13) || \
+                                    ((PIN) == PE14))  
+
+
+//defines
 #define PWM_CHAN1 1
 #define PWM_CHAN2 2
 #define PWM_CHAN3 3
 #define PWM_CHAN4 4
 
-//initialize PWM timer (TIMER0)
+#define PWM_PIN_INVALID -1
+
+//initialize PWM timer (TIMER1)
 void pwm_init(void);
 
+/* DEPRECATED */
 //enable pwm channel
 void pwm_enable_chan(int chan);
 
@@ -39,6 +54,10 @@ int pwm_get_max_int();
 //set the pwm duty cycle as an unnormalized integer
 //WARNING, no bounds checking is done
 void pwm_set_int(int chan, int compare_val);
+
+//connects specified pin to the appropriate timer channel.
+//look at the source code to see available pins
+int pwm_set_pin(int pin);
 
 #ifdef __cplusplus
  }
