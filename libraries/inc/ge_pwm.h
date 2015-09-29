@@ -15,6 +15,7 @@
 // includes
 #include "common.h"
 #include "stm32f30x_tim.h"
+#include "ge_pins.h"
 
 // macros
 #define IS_PWM_PIN(PIN)            (((PIN) == PA8) || \

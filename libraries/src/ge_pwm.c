@@ -6,7 +6,6 @@
  */
 
 #include "ge_pwm.h"
-#include "ge_pins.h"
 
 int _ge_pwm_period;
 
@@ -160,13 +159,13 @@ int pwm_set_pin(int pin) {
 
   pwm_pin_struct.GPIO_Pin = _ge_pin_num[pin];
   pwm_pin_struct.GPIO_OType = GPIO_OType_PP;
-  pwm_pin_struct.GPIO_PuPd = GPIO_PuPd_NOPULL;
+  pwm_pin_struct.GPIO_PuPd = GPIO_PuPd_UP;
   pwm_pin_struct.GPIO_Speed = GPIO_Speed_50MHz;
   pwm_pin_struct.GPIO_Mode = GPIO_Mode_AF;
 
   GPIO_Init(_ge_pin_port[pin], &pwm_pin_struct);
   //set alternate function
-  GPIO_PinAFConfig(_ge_pin_port[pin], _ge_pin_num[pin], pin_af);
+  GPIO_PinAFConfig(_ge_pin_port[pin], _ge_pin_source[pin], pin_af);
 
   //return the connected channel
   return chan;
@@ -175,7 +174,7 @@ int pwm_set_pin(int pin) {
 //set pwm count (16 bit unsigned)
 void pwm_set(int chan, float duty) {
   int compare_val = (int)(duty*(float)_ge_pwm_period);
-  set_pwm_int(chan,compare_val);
+  pwm_set_int(chan,compare_val);
 }
 
 int pwm_get_max_int()
