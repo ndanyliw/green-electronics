@@ -6,6 +6,7 @@
  */
 
 #include "ge_pwm.h"
+#include "ge_pins.h"
 
 int _ge_pwm_period;
 
@@ -65,6 +66,7 @@ void pwm_init(void) {
 //  TIM_ITConfig(TIM1, TIM_IT_CC1, ENABLE);
 }
 
+/* DEPRECATED */
 //enable pwm channel
 void pwm_enable_chan(int chan) {
   GPIO_InitTypeDef GPIO_InitStructure;
@@ -95,6 +97,79 @@ void pwm_enable_chan(int chan) {
       GPIO_PinAFConfig(GPIOA, GPIO_PinSource11, GPIO_AF_11);
       break;
   }
+}
+
+
+/**
+ * @brief Sets the pin to connect to the appropriate timer channel
+ * @details Looks through a lookup table to correctly initialize the
+ * specified pin and connect to the associate timer channel.
+ * 
+ * Available pins are: PE9, PE11, PE13, PE14, PA8, PA9, PA10, and PA11
+ * 
+ * @param pin Pin name to connect to. @ref ge_pins.h
+ * @return The associated timer channel for the pin. Or PWM_PIN_INVALID
+ * if the pin is not a valid PWM pin.
+ */
+int pwm_set_pin(int pin) {
+  //check if valid pin
+  if (!IS_PWM_PIN(pin))
+    return PWM_PIN_INVALID;
+
+  //select appropriate alternate function
+  uint8_t pin_af;
+  int chan;
+  switch (pin) {
+    case PA8:
+      pin_af = GPIO_AF_6;
+      chan = PWM_CHAN1;
+      break;
+    case PA9:
+      pin_af = GPIO_AF_6;
+      chan = PWM_CHAN2;
+      break;
+    case PA10:
+      pin_af = GPIO_AF_6;
+      chan = PWM_CHAN3;
+      break;
+    case PA11:
+      pin_af = GPIO_AF_11;
+      chan = PWM_CHAN4;
+      break;
+    case PE9:
+      pin_af = GPIO_AF_2;
+      chan = PWM_CHAN1;
+      break;
+    case PE11:
+      pin_af = GPIO_AF_2;
+      chan = PWM_CHAN2;
+      break;
+    case PE13:
+      pin_af = GPIO_AF_2;
+      chan = PWM_CHAN3;
+      break;
+    case PE14:
+      pin_af = GPIO_AF_2;
+      chan = PWM_CHAN4;
+      break;  
+  }
+
+  //Initialize associate GPIO
+  GPIO_InitTypeDef pwm_pin_struct;
+  GPIO_StructInit(&pwm_pin_struct);
+
+  pwm_pin_struct.GPIO_Pin = _ge_pin_num[pin];
+  pwm_pin_struct.GPIO_OType = GPIO_OType_PP;
+  pwm_pin_struct.GPIO_PuPd = GPIO_PuPd_NOPULL;
+  pwm_pin_struct.GPIO_Speed = GPIO_Speed_50MHz;
+  pwm_pin_struct.GPIO_Mode = GPIO_Mode_AF;
+
+  GPIO_Init(_ge_pin_port[pin], &pwm_pin_struct);
+  //set alternate function
+  GPIO_PinAFConfig(_ge_pin_port[pin], _ge_pin_num[pin], pin_af);
+
+  //return the connected channel
+  return chan;
 }
 
 //set pwm count (16 bit unsigned)
