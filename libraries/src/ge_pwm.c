@@ -216,11 +216,12 @@ float pwm_freq(float freq) {
   // handle high frequency cases where we must shorten our period
   if (master_period <= 65536) {
     _ge_pwm_period = (int)master_period - 1;
-    actual_freq = freq;
+    actual_freq = base_freq/(float)_ge_pwm_period;
   } else {
     prescaler = (int)((master_period/65536.0));
-    actual_freq = base_freq/((float)prescaler);
-    _ge_pwm_period = 65535;
+    float new_freq = base_freq/((float)(prescaler + 1));
+    _ge_pwm_period = (int)(new_freq/freq) - 1;
+    actual_freq = new_freq/(float)_ge_pwm_period;
   }
 
   TIM_PrescalerConfig(TIM1, prescaler, TIM_PSCReloadMode_Update);
