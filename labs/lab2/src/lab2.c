@@ -19,8 +19,8 @@ uint16_t zero_volts;
 uint16_t zero_amps;
 
 //current readings
-uint16_t voltage_reading;
-uint16_t current_reading;
+__IO uint16_t voltage_reading;
+__IO uint16_t current_reading;
 
 
 /**
