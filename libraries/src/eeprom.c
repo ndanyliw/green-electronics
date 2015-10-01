@@ -42,7 +42,7 @@
 uint16_t DataVar = 0;
 
 /* Virtual address defined by the user: 0xFFFF value is prohibited */
-extern uint16_t VirtAddVarTab[NB_OF_VAR];
+static uint16_t VirtAddVarTab[NB_OF_VAR];
 
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
@@ -65,6 +65,11 @@ uint16_t EE_Init(void)
   uint16_t EepromStatus = 0, ReadStatus = 0;
   int16_t x = -1;
   uint16_t  FlashStatus;
+
+  //Initialize virtual address table
+  for (int i = 0; i < NB_OF_VAR; i++) {
+    VirtAddVarTab[i] = i;
+  }
 
   /* Get Page0 status */
   PageStatus0 = (*(__IO uint16_t*)PAGE0_BASE_ADDRESS);

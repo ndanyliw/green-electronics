@@ -20,6 +20,9 @@
 
 #include "eeprom.h"
 
+//Virtual addresses
+extern uint16_t VirtAddVarTab[NB_OF_VAR];
+
 void eeprom_init();
 uint16_t eeprom_read(uint16_t addr, uint16_t* data);
 uint16_t eeprom_write(uint16_t addr, uint16_t data);
