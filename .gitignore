@@ -1,3 +1,28 @@
 *.s#*
 *.b#*
+
+# compilation results #
+#######################
+*.o
 *.a
+*.bin
+*.elf
+*.hex
+*.lst
+*.map
+*.d
+
+# Makefile target files #
+#########################
+dirs
+program
+
+# Eclipse & editor files #
+#########################
+.project
+.cproject
+*~
+
+# Log files #
+#############
+openocd.log
