@@ -12,6 +12,7 @@
 __IO uint32_t _ge_delay_time = 0;
 __IO uint32_t _ge_usb_timeout = 100;
 
+
 /**
  * @brief Initialize dependancies for libraries
  * @details Initializes the SysTick timer for generating delays.
