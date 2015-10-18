@@ -16,4 +16,5 @@
  #include "ge_system.h"
  #include "ge_timer.h"
  #include "ge_eeprom.h"
+ #include "ge_ic.h"
  // #include "ge_uart.h"

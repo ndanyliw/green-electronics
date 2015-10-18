@@ -18,7 +18,7 @@ ICTimerChan _ic_get_chan(uint16_t pin);
 //prescaler for timer
 static uint16_t _ge_ic_prescaler = 0;
 //most recent captured values
-static uint16_t _ge_ic_chan_captures[4];
+static __IO uint16_t _ge_ic_chan_captures[4];
 
 
 /**
@@ -45,20 +45,21 @@ void ic_init() {
   TIM_TimeBase_InitStructure.TIM_RepetitionCounter = 0;
   TIM_TimeBaseInit(TIM1, &TIM_TimeBase_InitStructure);
 
+  TIM_ClearFlag(TIM4, TIM_FLAG_Update);
+
   //setup NVIC
   NVIC_InitStructure.NVIC_IRQChannel = TIM4_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 3;
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+
+  NVIC_Init(&NVIC_InitStructure);
 
   //enable interrupts
   TIM_ITConfig(TIM4, TIM_IT_CC1 | TIM_IT_CC2 | TIM_IT_CC3 | TIM_IT_CC4, ENABLE);
 
   //enable timer
   TIM_Cmd(TIM4, ENABLE);
-
-  //reset flags
-  TIM4->SR = 0;
 }
 
 
@@ -102,7 +103,7 @@ ICTimerChan ic_enable_pin(uint16_t pin, float min_freq) {
   ic_init_struct.TIM_ICPolarity = TIM_ICPolarity_Rising;
   ic_init_struct.TIM_ICSelection = TIM_ICSelection_DirectTI;
   ic_init_struct.TIM_ICPrescaler = TIM_ICPSC_DIV1;
-  ic_init_struct.TIM_ICFilter = GE_IC_IFILTER;
+  ic_init_struct.TIM_ICFilter = 0;
 
   TIM_ICInit(TIM4, &ic_init_struct);
 
@@ -123,7 +124,7 @@ ICTimerChan ic_enable_pin(uint16_t pin, float min_freq) {
   gpio_struct.GPIO_Pin = _ge_pin_num[pin];
   gpio_struct.GPIO_OType = GPIO_OType_PP;
   gpio_struct.GPIO_Speed = GPIO_Speed_10MHz;
-  gpio_struct.GPIO_PuPd = GPIO_PuPd_UP;
+  gpio_struct.GPIO_PuPd = GPIO_PuPd_NOPULL;
 
   GPIO_Init(_ge_pin_port[pin], &gpio_struct);
 
@@ -165,7 +166,7 @@ ICTimerChan ic_enable_pin(uint16_t pin, float min_freq) {
 float ic_read_freq(uint16_t pin) {
   ICTimerChan chan = _ic_get_chan(pin);
 
-  float freq = 72.0e6/((float) _ge_ic_prescaler * _ge_ic_chan_captures[chan-1]);
+  float freq = 72.0e6/((float) _ge_ic_prescaler * _ge_ic_chan_captures[chan]);
 
   return freq;
 }
@@ -215,24 +216,73 @@ void TIM4_IRQHandler(void) {
   if (TIM_GetITStatus(TIM4, TIM_IT_CC1) != RESET) {
     TIM_ClearITPendingBit(TIM4, TIM_IT_CC1);
 
-    _ge_ic_chan_captures[IC_CHAN1 - 1] = TIM_GetCapture1(TIM4);
+    _ge_ic_chan_captures[IC_CHAN1] = TIM_GetCapture1(TIM4);
+
+    //reenable chan 1 IC
+    TIM_ICInitTypeDef ic_init_struct;
+    TIM_ICStructInit(&ic_init_struct);
+
+    ic_init_struct.TIM_Channel = TIM_Channel_1;
+    ic_init_struct.TIM_ICPolarity = TIM_ICPolarity_Rising;
+    ic_init_struct.TIM_ICSelection = TIM_ICSelection_DirectTI;
+    ic_init_struct.TIM_ICPrescaler = TIM_ICPSC_DIV1;
+    ic_init_struct.TIM_ICFilter = 0;
+
+    TIM_ICInit(TIM4, &ic_init_struct);
+    // _ge_ic_chan_captures[IC_CHAN1] = 3000;
   }
 
   if (TIM_GetITStatus(TIM4, TIM_IT_CC2) != RESET) {
     TIM_ClearITPendingBit(TIM4, TIM_IT_CC2);
 
-    _ge_ic_chan_captures[IC_CHAN2 - 1] = TIM_GetCapture1(TIM4);
+    _ge_ic_chan_captures[IC_CHAN2] = TIM_GetCapture2(TIM4);
+
+    //reenable chan 2 IC
+    TIM_ICInitTypeDef ic_init_struct;
+    TIM_ICStructInit(&ic_init_struct);
+
+    ic_init_struct.TIM_Channel = TIM_Channel_2;
+    ic_init_struct.TIM_ICPolarity = TIM_ICPolarity_Rising;
+    ic_init_struct.TIM_ICSelection = TIM_ICSelection_DirectTI;
+    ic_init_struct.TIM_ICPrescaler = TIM_ICPSC_DIV1;
+    ic_init_struct.TIM_ICFilter = 0;
+
+    TIM_ICInit(TIM4, &ic_init_struct);
   }
 
   if (TIM_GetITStatus(TIM4, TIM_IT_CC3) != RESET) {
     TIM_ClearITPendingBit(TIM4, TIM_IT_CC3);
 
-    _ge_ic_chan_captures[IC_CHAN3 - 1] = TIM_GetCapture1(TIM4);
+    _ge_ic_chan_captures[IC_CHAN3] = TIM_GetCapture3(TIM4);
+
+    //reenable chan 3 IC
+    TIM_ICInitTypeDef ic_init_struct;
+    TIM_ICStructInit(&ic_init_struct);
+
+    ic_init_struct.TIM_Channel = TIM_Channel_3;
+    ic_init_struct.TIM_ICPolarity = TIM_ICPolarity_Rising;
+    ic_init_struct.TIM_ICSelection = TIM_ICSelection_DirectTI;
+    ic_init_struct.TIM_ICPrescaler = TIM_ICPSC_DIV1;
+    ic_init_struct.TIM_ICFilter = 0;
+
+    TIM_ICInit(TIM4, &ic_init_struct);
   }
 
   if (TIM_GetITStatus(TIM4, TIM_IT_CC4) != RESET) {
     TIM_ClearITPendingBit(TIM4, TIM_IT_CC4);
 
-    _ge_ic_chan_captures[IC_CHAN4 - 1] = TIM_GetCapture1(TIM4);
+    _ge_ic_chan_captures[IC_CHAN4] = TIM_GetCapture4(TIM4);
+
+    //reenable chan 4 IC
+    TIM_ICInitTypeDef ic_init_struct;
+    TIM_ICStructInit(&ic_init_struct);
+
+    ic_init_struct.TIM_Channel = TIM_Channel_4;
+    ic_init_struct.TIM_ICPolarity = TIM_ICPolarity_Rising;
+    ic_init_struct.TIM_ICSelection = TIM_ICSelection_DirectTI;
+    ic_init_struct.TIM_ICPrescaler = TIM_ICPSC_DIV1;
+    ic_init_struct.TIM_ICFilter = 0;
+
+    TIM_ICInit(TIM4, &ic_init_struct);
   }
 }
