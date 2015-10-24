@@ -19,6 +19,7 @@ ICTimerChan _ic_get_chan(uint16_t pin);
 static uint16_t _ge_ic_prescaler = 0;
 //most recent captured values
 static __IO uint16_t _ge_ic_chan_captures[4];
+static __IO uint16_t _ge_ic_chan_captures_last[4];
 
 
 /**
@@ -166,7 +167,7 @@ ICTimerChan ic_enable_pin(uint16_t pin, float min_freq) {
 float ic_read_freq(uint16_t pin) {
   ICTimerChan chan = _ic_get_chan(pin);
 
-  float freq = 72.0e6/((float) _ge_ic_prescaler * _ge_ic_chan_captures[chan]);
+  float freq = 72.0e6/((float) _ge_ic_prescaler * (uint16_t)(_ge_ic_chan_captures[chan] - _ge_ic_chan_captures_last[chan]));
 
   return freq;
 }
@@ -216,6 +217,7 @@ void TIM4_IRQHandler(void) {
   if (TIM_GetITStatus(TIM4, TIM_IT_CC1) != RESET) {
     TIM_ClearITPendingBit(TIM4, TIM_IT_CC1);
 
+    _ge_ic_chan_captures_last[IC_CHAN1] = _ge_ic_chan_captures[IC_CHAN1];
     _ge_ic_chan_captures[IC_CHAN1] = TIM_GetCapture1(TIM4);
 
     //reenable chan 1 IC
@@ -235,6 +237,7 @@ void TIM4_IRQHandler(void) {
   if (TIM_GetITStatus(TIM4, TIM_IT_CC2) != RESET) {
     TIM_ClearITPendingBit(TIM4, TIM_IT_CC2);
 
+    _ge_ic_chan_captures_last[IC_CHAN2] = _ge_ic_chan_captures[IC_CHAN2];
     _ge_ic_chan_captures[IC_CHAN2] = TIM_GetCapture2(TIM4);
 
     //reenable chan 2 IC
@@ -253,6 +256,7 @@ void TIM4_IRQHandler(void) {
   if (TIM_GetITStatus(TIM4, TIM_IT_CC3) != RESET) {
     TIM_ClearITPendingBit(TIM4, TIM_IT_CC3);
 
+    _ge_ic_chan_captures_last[IC_CHAN3] = _ge_ic_chan_captures[IC_CHAN3];
     _ge_ic_chan_captures[IC_CHAN3] = TIM_GetCapture3(TIM4);
 
     //reenable chan 3 IC
@@ -271,6 +275,7 @@ void TIM4_IRQHandler(void) {
   if (TIM_GetITStatus(TIM4, TIM_IT_CC4) != RESET) {
     TIM_ClearITPendingBit(TIM4, TIM_IT_CC4);
 
+    _ge_ic_chan_captures_last[IC_CHAN4] = _ge_ic_chan_captures[IC_CHAN4];
     _ge_ic_chan_captures[IC_CHAN4] = TIM_GetCapture4(TIM4);
 
     //reenable chan 4 IC
