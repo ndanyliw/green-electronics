@@ -49,6 +49,8 @@ int timer_deinit();
 timer_id_t timer_register(uint32_t ms, void (*function)(void), uint8_t type);
 int timer_start(timer_id_t timer);
 int timer_stop(timer_id_t timer);
+void timer_set_period(uint32_t counts);
+uint32_t timer_get_period();
 
 
 #ifdef __cplusplus

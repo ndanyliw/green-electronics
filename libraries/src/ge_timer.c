@@ -27,6 +27,8 @@ __IO int _ge_tim_type[_GE_MAX_TIMERS];
 __IO int _ge_tim_offsets[_GE_MAX_TIMERS];
 /** array of whether the timer is running */
 __IO bool _ge_tim_state[_GE_MAX_TIMERS];
+/** period of TIM3 */
+__IO uint32_t _ge_tim_period;
 
 /**
  * @brief Initialize TIM3 to use for timing interrupts
@@ -38,6 +40,7 @@ int timer_init() {
   _ge_tim_max_counter = 0;
   _ge_tim_num_timers = 0;
   _ge_tim_count = 0;
+  _ge_tim_period = _GE_TIM_PERIOD;
 
   //initialize arrays
   for (int i = 0; i < _GE_MAX_TIMERS; i++) {
@@ -54,8 +57,15 @@ int timer_init() {
   //setup TIM3
   TIM_TimeBaseInitTypeDef TIM3_base;
   TIM_TimeBaseStructInit(&TIM3_base);
-  TIM3_base.TIM_Period = _GE_TIM_PERIOD - 1;
-  TIM3_base.TIM_Prescaler = 0;
+  if (_ge_tim_period <= 65535) {
+    TIM3_base.TIM_Period = _ge_tim_period - 1;
+    TIM3_base.TIM_Prescaler = 0;
+  } else {
+    // we want the minimum number of counts to accurately get the correct period
+    uint16_t presc = (_ge_tim_period >> 16);
+    TIM3_base.TIM_Prescaler = presc;
+    TIM3_base.TIM_Period = (_ge_tim_period/presc) - 1;
+  }
   TIM3_base.TIM_ClockDivision = TIM_CKD_DIV1;
   TIM3_base.TIM_CounterMode = TIM_CounterMode_Up;
   TIM3_base.TIM_RepetitionCounter = 0x00;
@@ -167,6 +177,45 @@ int timer_stop(timer_id_t timer) {
 
 
 /**
+ * @brief Sets the period of one count for the timers
+ * @details Sets the period of one count for the timers. This is referenced to
+ * 72 MHz
+ * 
+ * @param counts Number of clock counts per period
+ */
+void timer_set_period(uint32_t counts) {
+  _ge_tim_period = counts;
+
+  //setup TIM3
+  TIM_TimeBaseInitTypeDef TIM3_base;
+  TIM_TimeBaseStructInit(&TIM3_base);
+  if (_ge_tim_period <= 65535) {
+    TIM3_base.TIM_Period = _ge_tim_period - 1;
+    TIM3_base.TIM_Prescaler = 0;
+  } else {
+    // we want the minimum number of counts to accurately get the correct period
+    uint16_t presc = (_ge_tim_period >> 16);
+    TIM3_base.TIM_Prescaler = presc;
+    TIM3_base.TIM_Period = (_ge_tim_period/presc) - 1;
+  }
+  TIM3_base.TIM_ClockDivision = TIM_CKD_DIV1;
+  TIM3_base.TIM_CounterMode = TIM_CounterMode_Up;
+  TIM3_base.TIM_RepetitionCounter = 0x00;
+  TIM_TimeBaseInit(TIM3, &TIM3_base);
+}
+
+
+/**
+ * @brief Get the period of the timer
+ * @details Get the number of clock pulses per timing unit
+ * @return The period of the timer (relative to 72MHz)
+ */
+uint32_t timer_get_period() {
+  return _ge_tim_period;
+}
+
+
+/**
  * @brief Handler for global TIM3 update interrupt
  * @details Interrupt handler for TIM3 update interrupt. This
  * function updates the current interrupt counter and checks
@@ -174,8 +223,10 @@ int timer_stop(timer_id_t timer) {
  */
 void TIM3_IRQHandler() {
   if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET) {
+    TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
+
     if (_ge_tim_num_timers != 0) {
-      
+
       //check if should call one of the registered callbacks
       _ge_tim_count++;
       for (int i = 0; i < _GE_MAX_TIMERS; i++) {
@@ -199,6 +250,5 @@ void TIM3_IRQHandler() {
         }
       }
     }
-    TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
   }
 }
