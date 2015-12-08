@@ -65,7 +65,7 @@ GPIO_TypeDef *adc_bank_map[23] = {
 int calibration_value_adc1, calibration_value_adc2;
 
 int num_channels;
-int curr_chan;
+__IO int curr_chan;
 
 /*
  * This function initializes the ADCs in the STM32F3. This includes setting
