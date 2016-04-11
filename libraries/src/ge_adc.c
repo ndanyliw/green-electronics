@@ -198,6 +198,82 @@ void adc_enable_clocks(void) {
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE);
 }
 
+/**
+ * @brief Sets up the DMA for 
+ * @details [long description]
+ */
+void _adc_setup_dma(void) {
+
+}
+
+void adc_init(void) {
+  ADC_InitTypeDef       ADC_InitStructure;
+  ADC_CommonInitTypeDef ADC_CommonInitStructure;
+  GPIO_InitTypeDef   GPIO_InitStructure;
+  NVIC_InitTypeDef   NVIC_InitStructure;
+  __IO uint16_t calibration_value = 0;
+
+  //enable clocks
+  adc_enable_clocks();
+
+  ADC_StructInit(&ADC_InitStructure);
+
+  /* Calibration procedure */
+  ADC_VoltageRegulatorCmd(ADC1, ENABLE);
+
+  ADC_SelectCalibrationMode(ADC1, ADC_CalibrationMode_Single);
+  ADC_StartCalibration(ADC1);
+
+  while(ADC_GetCalibrationStatus(ADC1) != RESET);
+  calibration_value_adc1 = ADC_GetCalibrationValue(ADC1);
+
+  ADC_VoltageRegulatorCmd(ADC2, ENABLE);
+
+  ADC_SelectCalibrationMode(ADC2, ADC_CalibrationMode_Single);
+  ADC_StartCalibration(ADC2);
+
+  while(ADC_GetCalibrationStatus(ADC2) != RESET);
+  calibration_value_adc2 = calibration_value_adc2(ADC2);
+
+  /* Configure ADC1 and ADC2 in continuous mode */
+  ADC_CommonInitStructure.ADC_Mode = ADC_Mode_RegSimul;
+  ADC_CommonInitStructure.ADC_Clock = ADC_Clock_AsynClkMode;
+  ADC_CommonInitStructure.ADC_DMAAccessMode = ADC_DMAAccessMode_1;
+  ADC_CommonInitStructure.ADC_DMAMode = ADC_DMAMode_Circular;
+  ADC_CommonInitStructure.ADC_TwoSamplingDelay = 0;
+
+  ADC_CommonInit(ADC1, &ADC_CommonInitStructure);
+  ADC_CommonInit(ADC2, &ADC_CommonInitStructure);
+
+  ADC_InitStructure.ADC_ContinuousConvMode = ADC_ContinuousConvMode_Disable;
+  ADC_InitStructure.ADC_Resolution = ADC_Resolution_12b;
+  ADC_InitStructure.ADC_ExternalTrigConvEvent = ADC_ExternalTrigConvEvent_11;
+  ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
+  ADC_InitStructure.ADC_OverrunMode = ADC_OverrunMode_Disable;
+  ADC_InitStructure.ADC_AutoInjMode = ADC_AutoInjec_Disable;
+  ADC_InitStructure.ADC_NbrOfRegChannel = 1;
+
+  ADC_Init(ADC1, &ADC_InitStructure);
+  ADC_Init(ADC2, &ADC_InitStructure);
+
+  num_channels = 0;
+  curr_chan = 0;
+  for (int i = 0; i < 15; i++)
+    adc_reg_callbacks[i] = NULL;
+
+  /* Enable End of Conversion and End of Sequence interrupts */
+  ADC_ITConfig(ADC1, ADC_IT_EOC, ENABLE);
+  ADC_ITConfig(ADC1, ADC_IT_EOS, ENABLE);
+
+  /* Configure and enable ADC1 interrupt */
+  NVIC_InitStructure.NVIC_IRQChannel = ADC1_2_IRQn;
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+  NVIC_Init(&NVIC_InitStructure);
+
+}
+
 void adc_init(void) {
   ADC_InitTypeDef       ADC_InitStructure;
   ADC_CommonInitTypeDef ADC_CommonInitStructure;
