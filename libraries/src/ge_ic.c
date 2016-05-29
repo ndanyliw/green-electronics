@@ -18,8 +18,14 @@ ICTimerChan _ic_get_chan(uint16_t pin);
 //prescaler for timer
 static uint16_t _ge_ic_prescaler = 0;
 //most recent captured values
+static __IO uint32_t _ge_ic_chan_period[4];
 static __IO uint16_t _ge_ic_chan_captures[4];
 static __IO uint16_t _ge_ic_chan_captures_last[4];
+static __IO uint16_t _ge_ic_chan_ovf[4];
+static __IO bool _ge_ic_chan_freq_avail[4];
+static __IO uint32_t _ge_ic_chan_period_min[4];
+static __IO uint32_t _ge_ic_chan_period_max[4];
+static __IO bool _ge_ic_chan_filt_en[4];
 
 
 /**
@@ -44,7 +50,7 @@ void ic_init() {
   TIM_TimeBase_InitStructure.TIM_Period = 0xffff;
   TIM_TimeBase_InitStructure.TIM_Prescaler = _ge_ic_prescaler; // 72 Mhz
   TIM_TimeBase_InitStructure.TIM_RepetitionCounter = 0;
-  TIM_TimeBaseInit(TIM1, &TIM_TimeBase_InitStructure);
+  TIM_TimeBaseInit(TIM4, &TIM_TimeBase_InitStructure);
 
   TIM_ClearFlag(TIM4, TIM_FLAG_Update);
 
@@ -56,8 +62,14 @@ void ic_init() {
 
   NVIC_Init(&NVIC_InitStructure);
 
+  //initialize overflow count and new data flags
+  for (int i = 0; i < 4; i++) {
+    _ge_ic_chan_ovf[i] = 0;
+    _ge_ic_chan_freq_avail[i] = false;
+  }
+
   //enable interrupts
-  TIM_ITConfig(TIM4, TIM_IT_CC1 | TIM_IT_CC2 | TIM_IT_CC3 | TIM_IT_CC4, ENABLE);
+  TIM_ITConfig(TIM4, TIM_IT_Update | TIM_IT_CC1 | TIM_IT_CC2 | TIM_IT_CC3 | TIM_IT_CC4, ENABLE);
 
   //enable timer
   TIM_Cmd(TIM4, ENABLE);
@@ -104,7 +116,7 @@ ICTimerChan ic_enable_pin(uint16_t pin, float min_freq) {
   ic_init_struct.TIM_ICPolarity = TIM_ICPolarity_Rising;
   ic_init_struct.TIM_ICSelection = TIM_ICSelection_DirectTI;
   ic_init_struct.TIM_ICPrescaler = TIM_ICPSC_DIV1;
-  ic_init_struct.TIM_ICFilter = 0;
+  ic_init_struct.TIM_ICFilter = GE_IC_IFILTER;
 
   TIM_ICInit(TIM4, &ic_init_struct);
 
@@ -124,8 +136,8 @@ ICTimerChan ic_enable_pin(uint16_t pin, float min_freq) {
   gpio_struct.GPIO_Mode = GPIO_Mode_AF;
   gpio_struct.GPIO_Pin = _ge_pin_num[pin];
   gpio_struct.GPIO_OType = GPIO_OType_PP;
-  gpio_struct.GPIO_Speed = GPIO_Speed_10MHz;
-  gpio_struct.GPIO_PuPd = GPIO_PuPd_NOPULL;
+  gpio_struct.GPIO_Speed = GPIO_Speed_50MHz;
+  gpio_struct.GPIO_PuPd = GPIO_PuPd_UP;
 
   GPIO_Init(_ge_pin_port[pin], &gpio_struct);
 
@@ -167,9 +179,46 @@ ICTimerChan ic_enable_pin(uint16_t pin, float min_freq) {
 float ic_read_freq(uint16_t pin) {
   ICTimerChan chan = _ic_get_chan(pin);
 
-  float freq = 72.0e6/((float) _ge_ic_prescaler * (uint16_t)(_ge_ic_chan_captures[chan] - _ge_ic_chan_captures_last[chan]));
+  float freq = 72.0e6/((float) _ge_ic_prescaler * (uint16_t)(_ge_ic_chan_captures[chan]
+                       - _ge_ic_chan_captures_last[chan]));
+
+  // set flag as read
+  _ge_ic_chan_freq_avail[chan] = false;
 
   return freq;
+}
+
+
+/**
+ * @brief Returns whether current frequency value has been recently updated
+ * @details Checks if frequency value has been read previously and if so returns
+ * a false if it hasn't captured another edge in that time.
+ * 
+ * @param pin Pin to check
+ * @return True if new value. False if old.
+ */
+bool ic_freq_available(uint16_t pin) {
+  ICTimerChan chan = _ic_get_chan(pin);
+
+  return _ge_ic_chan_freq_avail[chan];
+}
+
+
+void ic_set_range(uint16_t pin, float min_freq, float max_freq) {
+  ICTimerChan chan = _ic_get_chan(pin);
+
+  // calculate counts for slowest frequency
+  _ge_ic_chan_period_max[chan] = (uint32_t) roundf(72.0e6/(min_freq * (float)
+                                                           _ge_ic_prescaler));
+
+  // calculate counts for fastest frequency
+  _ge_ic_chan_period_min[chan] = (uint32_t) roundf(72.0e6/(max_freq * (float)
+                                                           _ge_ic_prescaler));
+}
+
+
+void ic_enable_filt(uint16_t pin, bool enable) {
+  
 }
 
 
@@ -220,6 +269,22 @@ void TIM4_IRQHandler(void) {
     _ge_ic_chan_captures_last[IC_CHAN1] = _ge_ic_chan_captures[IC_CHAN1];
     _ge_ic_chan_captures[IC_CHAN1] = TIM_GetCapture1(TIM4);
 
+    // set updated available flag
+    _ge_ic_chan_freq_avail[IC_CHAN1] = true;
+
+    //calculate actual counts based on timer overflow count
+    if (_ge_ic_chan_captures_last[IC_CHAN1] > _ge_ic_chan_captures[IC_CHAN1]) {
+      _ge_ic_chan_period[IC_CHAN1] = (uint32_t) _ge_ic_chan_captures[IC_CHAN1]
+                                     + 65536 * (_ge_ic_chan_ovf[IC_CHAN1] - 1)
+                                     - _ge_ic_chan_captures_last[IC_CHAN1];
+    } else {
+      _ge_ic_chan_period[IC_CHAN1] = (uint32_t) _ge_ic_chan_captures[IC_CHAN1]
+                                     + 65536 * (_ge_ic_chan_ovf[IC_CHAN1])
+                                     - _ge_ic_chan_captures_last[IC_CHAN1];
+    }
+
+    _ge_ic_chan_ovf[IC_CHAN1] = 0;
+
     //reenable chan 1 IC
     TIM_ICInitTypeDef ic_init_struct;
     TIM_ICStructInit(&ic_init_struct);
@@ -228,7 +293,7 @@ void TIM4_IRQHandler(void) {
     ic_init_struct.TIM_ICPolarity = TIM_ICPolarity_Rising;
     ic_init_struct.TIM_ICSelection = TIM_ICSelection_DirectTI;
     ic_init_struct.TIM_ICPrescaler = TIM_ICPSC_DIV1;
-    ic_init_struct.TIM_ICFilter = 0;
+    ic_init_struct.TIM_ICFilter = GE_IC_IFILTER;
 
     TIM_ICInit(TIM4, &ic_init_struct);
     // _ge_ic_chan_captures[IC_CHAN1] = 3000;
@@ -240,6 +305,22 @@ void TIM4_IRQHandler(void) {
     _ge_ic_chan_captures_last[IC_CHAN2] = _ge_ic_chan_captures[IC_CHAN2];
     _ge_ic_chan_captures[IC_CHAN2] = TIM_GetCapture2(TIM4);
 
+    // set updated available flag
+    _ge_ic_chan_freq_avail[IC_CHAN2] = true;
+
+    //calculate actual counts based on timer overflow count
+    if (_ge_ic_chan_captures_last[IC_CHAN2] > _ge_ic_chan_captures[IC_CHAN2]) {
+      _ge_ic_chan_period[IC_CHAN2] = (uint32_t) _ge_ic_chan_captures[IC_CHAN2]
+                                     + 65536 * (_ge_ic_chan_ovf[IC_CHAN2] - 1)
+                                     - _ge_ic_chan_captures_last[IC_CHAN2];
+    } else {
+      _ge_ic_chan_period[IC_CHAN2] = (uint32_t) _ge_ic_chan_captures[IC_CHAN2]
+                                     + 65536 * (_ge_ic_chan_ovf[IC_CHAN2])
+                                     - _ge_ic_chan_captures_last[IC_CHAN2];
+    }
+
+    _ge_ic_chan_ovf[IC_CHAN2] = 0;
+
     //reenable chan 2 IC
     TIM_ICInitTypeDef ic_init_struct;
     TIM_ICStructInit(&ic_init_struct);
@@ -248,7 +329,7 @@ void TIM4_IRQHandler(void) {
     ic_init_struct.TIM_ICPolarity = TIM_ICPolarity_Rising;
     ic_init_struct.TIM_ICSelection = TIM_ICSelection_DirectTI;
     ic_init_struct.TIM_ICPrescaler = TIM_ICPSC_DIV1;
-    ic_init_struct.TIM_ICFilter = 0;
+    ic_init_struct.TIM_ICFilter = GE_IC_IFILTER;
 
     TIM_ICInit(TIM4, &ic_init_struct);
   }
@@ -259,6 +340,22 @@ void TIM4_IRQHandler(void) {
     _ge_ic_chan_captures_last[IC_CHAN3] = _ge_ic_chan_captures[IC_CHAN3];
     _ge_ic_chan_captures[IC_CHAN3] = TIM_GetCapture3(TIM4);
 
+    // set updated available flag
+    _ge_ic_chan_freq_avail[IC_CHAN3] = true;
+
+    //calculate actual counts based on timer overflow count
+    if (_ge_ic_chan_captures_last[IC_CHAN3] > _ge_ic_chan_captures[IC_CHAN3]) {
+      _ge_ic_chan_period[IC_CHAN3] = (uint32_t) _ge_ic_chan_captures[IC_CHAN3]
+                                     + 65536 * (_ge_ic_chan_ovf[IC_CHAN3] - 1)
+                                     - _ge_ic_chan_captures_last[IC_CHAN3];
+    } else {
+      _ge_ic_chan_period[IC_CHAN3] = (uint32_t) _ge_ic_chan_captures[IC_CHAN3]
+                                     + 65536 * (_ge_ic_chan_ovf[IC_CHAN3])
+                                     - _ge_ic_chan_captures_last[IC_CHAN3];
+    }
+
+    _ge_ic_chan_ovf[IC_CHAN3] = 0;
+
     //reenable chan 3 IC
     TIM_ICInitTypeDef ic_init_struct;
     TIM_ICStructInit(&ic_init_struct);
@@ -267,7 +364,7 @@ void TIM4_IRQHandler(void) {
     ic_init_struct.TIM_ICPolarity = TIM_ICPolarity_Rising;
     ic_init_struct.TIM_ICSelection = TIM_ICSelection_DirectTI;
     ic_init_struct.TIM_ICPrescaler = TIM_ICPSC_DIV1;
-    ic_init_struct.TIM_ICFilter = 0;
+    ic_init_struct.TIM_ICFilter = GE_IC_IFILTER;
 
     TIM_ICInit(TIM4, &ic_init_struct);
   }
@@ -278,6 +375,22 @@ void TIM4_IRQHandler(void) {
     _ge_ic_chan_captures_last[IC_CHAN4] = _ge_ic_chan_captures[IC_CHAN4];
     _ge_ic_chan_captures[IC_CHAN4] = TIM_GetCapture4(TIM4);
 
+    // set updated available flag
+    _ge_ic_chan_freq_avail[IC_CHAN4] = true;
+
+    //calculate actual counts based on timer overflow count
+    if (_ge_ic_chan_captures_last[IC_CHAN4] > _ge_ic_chan_captures[IC_CHAN4]) {
+      _ge_ic_chan_period[IC_CHAN4] = (uint32_t) _ge_ic_chan_captures[IC_CHAN4]
+                                     + 65536 * (_ge_ic_chan_ovf[IC_CHAN4] - 1)
+                                     - _ge_ic_chan_captures_last[IC_CHAN4];
+    } else {
+      _ge_ic_chan_period[IC_CHAN4] = (uint32_t) _ge_ic_chan_captures[IC_CHAN4]
+                                     + 65536 * (_ge_ic_chan_ovf[IC_CHAN4])
+                                     - _ge_ic_chan_captures_last[IC_CHAN4];
+    }
+
+    _ge_ic_chan_ovf[IC_CHAN4] = 0;
+
     //reenable chan 4 IC
     TIM_ICInitTypeDef ic_init_struct;
     TIM_ICStructInit(&ic_init_struct);
@@ -286,8 +399,16 @@ void TIM4_IRQHandler(void) {
     ic_init_struct.TIM_ICPolarity = TIM_ICPolarity_Rising;
     ic_init_struct.TIM_ICSelection = TIM_ICSelection_DirectTI;
     ic_init_struct.TIM_ICPrescaler = TIM_ICPSC_DIV1;
-    ic_init_struct.TIM_ICFilter = 0;
+    ic_init_struct.TIM_ICFilter = GE_IC_IFILTER;
 
     TIM_ICInit(TIM4, &ic_init_struct);
+  }
+
+  if (TIM_GetITStatus(TIM4, TIM_IT_Update) != RESET) {
+    TIM_ClearITPendingBit(TIM4, TIM_IT_Update);
+
+    for (int i = 0; i < 4; i++) {
+      _ge_ic_chan_ovf[i]++;
+    }
   }
 }
