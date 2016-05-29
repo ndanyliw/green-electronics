@@ -27,7 +27,7 @@
  * Enumerate pins so they can be used in lookup tables for
  * GPIO port and bank information.
  */
-enum GE_PIN { 
+typedef enum GE_PIN { 
   PA0, PA1, PA2, PA3, PA4, PA5, PA6, PA7, PA8, PA9, PA10, PA11, PA12,
   PA13, PA14, PA15,
   PB0, PB1, PB2, PB3, PB4, PB5, PB6, PB7, PB8, PB9, PB10, PB11, PB12,
@@ -39,7 +39,7 @@ enum GE_PIN {
   PE0, PE1, PE2, PE3, PE4, PE5, PE6, PE7, PE8, PE9, PE10, PE11, PE12,
   PE13, PE14, PE15,
   PF0, PF1, PF2, PF4, PF6, PF9, PF10
-};
+} GPIOPin;
 
 //only define for compilation of library
 #ifdef GE_LIB

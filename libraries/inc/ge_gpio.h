@@ -19,7 +19,7 @@
 #include "common.h"
 #include "ge_pins.h"
 
-typedef uint8_t GPIOPin;
+// typedef uint8_t GPIOPin;
 
 //Defines
 //GPIO directions

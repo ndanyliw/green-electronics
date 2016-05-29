@@ -10,8 +10,8 @@
  * @date  09.2015
  */
 
- #ifndef _GE_LCD_H
- #define _GE_LCD_H
+#ifndef _GE_LCD_H
+#define _GE_LCD_H
 
 #ifdef __cplusplus
  extern "C" {
