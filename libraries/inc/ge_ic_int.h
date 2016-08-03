@@ -11,7 +11,7 @@
 
 #ifndef _GE_IC_H
 #define _GE_IC_H
-#endif
+
 
 #ifdef __cplusplus
  extern "C" {
@@ -36,4 +36,6 @@ float ic_read_freq();
 
 #ifdef __cplusplus
  }
+#endif
+
 #endif
