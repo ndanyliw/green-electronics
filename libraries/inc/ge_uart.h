@@ -21,7 +21,7 @@
 #include "ge_pins.h"
 #include "buffer.h"
 
-// #define BUFFERED
+#define BUFFERED
 #ifdef BUFFERED
 extern volatile FIFO_TypeDef U1Rx, U1Tx;
 #endif
@@ -30,8 +30,9 @@ void ge_uart_init(uint32_t baud);
 void ge_uart_put(uint8_t ch);
 uint8_t ge_uart_get(void);
 int ge_uart_available();
-int _write(int file, char *ptr, int len);
-int _read(int file, char *ptr, int len);
+void ge_uart_write(char *str, int len);
+// int _write(int file, char *ptr, int len);
+// int _read(int file, char *ptr, int len);
 
 #ifdef __cplusplus
  }
