@@ -8,16 +8,10 @@
 #include <sys/stat.h>
 #include <sys/times.h>
 #include <sys/unistd.h>
-#include <stdint.h>
 #include "stm32f30x_usart.h"
 #include "ge_uart.h"
 
 extern uint32_t __get_MSP(void);
-
-/* Standard IO device handles. */
-#define STDIN  0
-#define STDOUT 1
-#define STDERR 2
 
 #ifndef STDOUT_USART
 #define STDOUT_USART 1
@@ -42,13 +36,13 @@ extern int errno;
 char *__env[1] = { 0 };
 char **environ = __env;
 
-int _write(int file, char *ptr, int len, int mode);
-int _read(int file, char *ptr, int len, int mode);
+int _write(int file, char *ptr, int len);
+int _read(int file, char *ptr, int len);
 int _fstat(int file, struct stat *st);
 int _getpid(void);
 int _fork(void);
 void _exit(int status) {
-    _write(1, "exit", 4, 0);
+    _write(1, "exit", 4);
     while (1) {
         ;
     }
@@ -177,7 +171,7 @@ char * stack = (char*) __get_MSP();
  */
 
 
-int _read(int file, char *ptr, int len, int mode) {
+int _read(int file, char *ptr, int len) {
     int n;
     int num = 0;
     switch (file) {
@@ -248,13 +242,13 @@ int _wait(int *status) {
  Write a character to a file. `libc' subroutines will use this system routine for output to all files, including stdout
  Returns -1 on error or number of bytes sent
  */
-int _write(int file, char *ptr, int len, int mode) {
+int _write(int file, char *ptr, int len) {
     int n;
     switch (file) {
     case STDOUT_FILENO: /*stdout*/
         for (n = 0; n < len; n++) {
 #if STDOUT_USART == 1
-            ge_uart_put(*(const char *)ptr++);
+            ge_uart_put(ptr++);
             // ge_uart_put(*ptr++ & (uint16_t)0x01FF);
             //while ((USART1->SR & USART_FLAG_TC) == (uint16_t)RESET) {}
             //USART1->DR = (*ptr++ & (uint16_t)0x01FF);
@@ -273,7 +267,7 @@ int _write(int file, char *ptr, int len, int mode) {
     case STDERR_FILENO: /* stderr */
         for (n = 0; n < len; n++) {
 #if STDERR_USART == 1
-            ge_uart_put(*(const char *)ptr++);
+            ge_uart_put(ptr++);
             // ge_uart_put(*ptr++ & (uint16_t)0x01FF);
 #elif  STDERR_USART == 2
             while ((USART2->SR & USART_FLAG_TC) == (uint16_t) RESET) {
@@ -291,15 +285,3 @@ int _write(int file, char *ptr, int len, int mode) {
     }
     return len;
 }
-
-// int _write (int file, char *ptr, int len, int mode) 
-// {
-//     if ((file == STDOUT) || (file == STDERR))
-//     {
-//         ge_uart_write((const char *) ptr, len);
-//         return (len);
-//     };
-//     if (file <= STDERR) return (-1);
-//     //return (__write (file, ptr, len));
-//   return -1;
-// }

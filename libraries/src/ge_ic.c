@@ -139,6 +139,7 @@ ICTimerChan ic_enable_pin(uint16_t pin, float min_freq) {
   gpio_struct.GPIO_Speed = GPIO_Speed_50MHz;
   gpio_struct.GPIO_PuPd = GPIO_PuPd_UP;
 
+
   GPIO_Init(_ge_pin_port[pin], &gpio_struct);
 
   uint8_t pin_af;

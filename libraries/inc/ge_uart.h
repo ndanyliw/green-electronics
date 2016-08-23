@@ -2,33 +2,40 @@
  * @file  ge_uart.h
  * 
  * @brief UART library for the STM32 Discovery board for use with the
- * EE155 breakout board
+ * EE155 breakout board.
+ * 
+ * Code adapted from http://www.embedds.com/programming-stm32-usart-using-gcc-tools-part-1/
  * 
  * @author Ned Danyliw
- * @date  09.2015
+ * @date  08.2016
  */
 
 #ifndef _GE_UART_H
 #define _GE_UART_H
 
 #ifdef __cplusplus
-  extern "C" {
+ extern "C" {
 #endif
 
-// includes
 #include "common.h"
-#include "stm32f30x_usart.h"
+#include "ge_pins.h"
+#include "buffer.h"
 
+#define BUFFERED
+#ifdef BUFFERED
+extern volatile FIFO_TypeDef U1Rx, U1Tx;
+#endif
 
 void ge_uart_init(uint32_t baud);
 void ge_uart_put(uint8_t ch);
-uint8_t ge_uart_get();
+uint8_t ge_uart_get(void);
 int ge_uart_available();
-
-
+void ge_uart_write(char *str, int len);
+// int _write(int file, char *ptr, int len);
+// int _read(int file, char *ptr, int len);
 
 #ifdef __cplusplus
-  }
+ }
 #endif
 
 #endif
