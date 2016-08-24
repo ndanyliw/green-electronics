@@ -64,6 +64,8 @@ GE_ADC_chan_info adc_conv_order[NUM_ADC];
 
 // ADC_CHAN_Type adc_conv_order[NUM_ADC];
 
+volatile unsigned short ADC_Val[2];
+
 //saved data buffer
 uint32_t data_buf[16];
 

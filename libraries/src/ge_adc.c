@@ -278,6 +278,9 @@ void adc_enable_clocks(void) {
   RCC_ADCCLKConfig(RCC_ADC12PLLCLK_Div2);
   // RCC_ADCCLKConfig(RCC_ADC34PLLCLK_Div2);
 
+  /* Enable DMA1 */
+  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
+
   /* ADC1 Periph clock enable */
   RCC_AHBPeriphClockCmd(RCC_AHBPeriph_ADC12, ENABLE);
   // RCC_AHBPeriphClockCmd(RCC_AHBPeriph_ADC34, ENABLE);
@@ -294,6 +297,9 @@ void adc_init(void) {
   GPIO_InitTypeDef   GPIO_InitStructure;
   NVIC_InitTypeDef   NVIC_InitStructure;
   __IO uint16_t calibration_value = 0;
+
+  //enable DMA
+  DMA_Cmd(DMA1_Channel1, ENABLE);
 
   //enable clocks
   adc_enable_clocks();
@@ -376,25 +382,52 @@ void adc_init(void) {
   // for (int i = 0; i < 16; i++)
   //   adc_reg_callbacks[i] = NULL;
 
+  /* DMA configuration */ 
+  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
+  
+  DMA_InitTypeDef DMA_InitStructure;
+  DMA_InitStructure.DMA_BufferSize = 2;
+  DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
+  DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)&ADC_Val[0];
+  DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord;
+  DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+  DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
+  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC1->DR;
+  DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
+  DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+  DMA_InitStructure.DMA_Priority = DMA_Priority_High;
+
+  DMA_Init(DMA1_Channel1, &DMA_InitStructure);
+
+  // Enable DMA1 Channel Transfer Complete interrupt
+  DMA_ITConfig(DMA1_Channel1, DMA_IT_TC, ENABLE);
+
+  //Enable DMA1 channel IRQ Channel */
+  NVIC_InitStructure.NVIC_IRQChannel = DMA1_Channel1_IRQn;
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+  NVIC_Init(&NVIC_InitStructure);
+
   //set adc state
   adc_state = 0xc;
 
   /* Enable End of Conversion and End of Sequence interrupts */
-  ADC_ITConfig(ADC1, ADC_IT_EOC, ENABLE);
-  ADC_ITConfig(ADC1, ADC_IT_EOS, ENABLE);
-  ADC_ITConfig(ADC2, ADC_IT_EOC, ENABLE);
-  ADC_ITConfig(ADC2, ADC_IT_EOS, ENABLE);
+  // ADC_ITConfig(ADC1, ADC_IT_EOC, ENABLE);
+  // ADC_ITConfig(ADC1, ADC_IT_EOS, ENABLE);
+  // ADC_ITConfig(ADC2, ADC_IT_EOC, ENABLE);
+  // ADC_ITConfig(ADC2, ADC_IT_EOS, ENABLE);
   // ADC_ITConfig(ADC3, ADC_IT_EOC, ENABLE);
   // ADC_ITConfig(ADC3, ADC_IT_EOS, ENABLE);
   // ADC_ITConfig(ADC4, ADC_IT_EOC, ENABLE);
   // ADC_ITConfig(ADC4, ADC_IT_EOS, ENABLE);
 
   /* Configure and enable ADC1 and ADC2 interrupt */
-  NVIC_InitStructure.NVIC_IRQChannel = ADC1_2_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 3;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
-  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-  NVIC_Init(&NVIC_InitStructure);
+  // NVIC_InitStructure.NVIC_IRQChannel = ADC1_2_IRQn;
+  // NVIC_InitStructure.NVIC_IRQChannelSubPriority = 3;
+  // NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+  // NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+  // NVIC_Init(&NVIC_InitStructure);
 
   /* Configure and enable ADC3 interrupt */
   // NVIC_InitStructure.NVIC_IRQChannel = ADC3_IRQn;
@@ -409,6 +442,11 @@ void adc_init(void) {
   // NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
   // NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
   // NVIC_Init(&NVIC_InitStructure);
+
+  DMA_Cmd(DMA1_Channel1, ENABLE);
+  ADC_DMACmd(ADC1, ENABLE);
+
+
 
 }
 
@@ -734,6 +772,19 @@ uint8_t adc_get_ovf() {
 
 uint8_t adc_clear_ovf() {
   _ge_adc_ovf = 0;
+}
+
+void DMA1_Channel1_IRQHandler(void) {
+  // adc_reg_callback(ADC_Val);
+  // ADC_StartConversion(ADC1);
+  //Test on DMA1 Channel1 Transfer Complete interrupt
+  if(DMA_GetITStatus(DMA1_IT_TC1))
+  {
+    // status=1;
+   //Clear DMA1 interrupt pending bits
+    DMA_ClearITPendingBit(DMA1_IT_GL1);
+  }
+  // ADC_StartConversion(ADC1);
 }
 
 void ADC1_2_IRQHandler(void) {
