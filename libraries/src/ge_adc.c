@@ -276,11 +276,11 @@ void adc_enable_clocks(void) {
 
   /* Configure the ADC clock */
   RCC_ADCCLKConfig(RCC_ADC12PLLCLK_Div2);
-  RCC_ADCCLKConfig(RCC_ADC34PLLCLK_Div2);
+  // RCC_ADCCLKConfig(RCC_ADC34PLLCLK_Div2);
 
   /* ADC1 Periph clock enable */
   RCC_AHBPeriphClockCmd(RCC_AHBPeriph_ADC12, ENABLE);
-  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_ADC34, ENABLE);
+  // RCC_AHBPeriphClockCmd(RCC_AHBPeriph_ADC34, ENABLE);
 
   // enable TIM2
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
@@ -320,23 +320,23 @@ void adc_init(void) {
   calibration_value_adc2 = ADC_GetCalibrationValue(ADC2);
 
 
-  //ADC3
-  ADC_VoltageRegulatorCmd(ADC3, ENABLE);
+  // //ADC3
+  // ADC_VoltageRegulatorCmd(ADC3, ENABLE);
 
-  ADC_SelectCalibrationMode(ADC3, ADC_CalibrationMode_Single);
-  ADC_StartCalibration(ADC3);
+  // ADC_SelectCalibrationMode(ADC3, ADC_CalibrationMode_Single);
+  // ADC_StartCalibration(ADC3);
 
-  while(ADC_GetCalibrationStatus(ADC3) != RESET);
-  calibration_value_adc3 = ADC_GetCalibrationValue(ADC3);
+  // while(ADC_GetCalibrationStatus(ADC3) != RESET);
+  // calibration_value_adc3 = ADC_GetCalibrationValue(ADC3);
 
-  //ADC4
-  ADC_VoltageRegulatorCmd(ADC4, ENABLE);
+  // //ADC4
+  // ADC_VoltageRegulatorCmd(ADC4, ENABLE);
 
-  ADC_SelectCalibrationMode(ADC4, ADC_CalibrationMode_Single);
-  ADC_StartCalibration(ADC4);
+  // ADC_SelectCalibrationMode(ADC4, ADC_CalibrationMode_Single);
+  // ADC_StartCalibration(ADC4);
 
-  while(ADC_GetCalibrationStatus(ADC4) != RESET);
-  calibration_value_adc4 = ADC_GetCalibrationValue(ADC4);
+  // while(ADC_GetCalibrationStatus(ADC4) != RESET);
+  // calibration_value_adc4 = ADC_GetCalibrationValue(ADC4);
 
   /* Configure ADC1, ADC2, ADC3, and ADC4 in continuous mode */
   ADC_CommonInitStructure.ADC_Mode = ADC_Mode_Independent;
@@ -347,43 +347,47 @@ void adc_init(void) {
 
   ADC_CommonInit(ADC1, &ADC_CommonInitStructure);
   ADC_CommonInit(ADC2, &ADC_CommonInitStructure);
-  ADC_CommonInit(ADC3, &ADC_CommonInitStructure);
-  ADC_CommonInit(ADC4, &ADC_CommonInitStructure);
+  // ADC_CommonInit(ADC3, &ADC_CommonInitStructure);
+  // ADC_CommonInit(ADC4, &ADC_CommonInitStructure);
 
   ADC_InitStructure.ADC_ContinuousConvMode = ADC_ContinuousConvMode_Disable;
   ADC_InitStructure.ADC_Resolution = ADC_Resolution_12b;
   ADC_InitStructure.ADC_ExternalTrigConvEvent = ADC_ExternalTrigConvEvent_11;
+  ADC_InitStructure.ADC_ExternalTrigEventEdge = ADC_ExternalTrigEventEdge_RisingEdge;
   ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
   ADC_InitStructure.ADC_OverrunMode = ADC_OverrunMode_Disable;
   ADC_InitStructure.ADC_AutoInjMode = ADC_AutoInjec_Disable;
-  ADC_InitStructure.ADC_NbrOfRegChannel = 1;
+  ADC_InitStructure.ADC_NbrOfRegChannel = 0;
 
   ADC_Init(ADC1, &ADC_InitStructure);
   ADC_Init(ADC2, &ADC_InitStructure);
-  ADC_Init(ADC3, &ADC_InitStructure);
-  ADC_Init(ADC4, &ADC_InitStructure);
+  // ADC_Init(ADC3, &ADC_InitStructure);
+  // ADC_Init(ADC4, &ADC_InitStructure);
 
   num_chan_adc1 = 0;
   num_chan_adc2 = 0;
-  num_chan_adc3 = 0;
-  num_chan_adc4 = 0;
+  // num_chan_adc3 = 0;
+  // num_chan_adc4 = 0;
   curr_chan1 = 0;
   curr_chan2 = 0;
-  curr_chan3 = 0;
-  curr_chan4 = 0;
+  // curr_chan3 = 0;
+  // curr_chan4 = 0;
 
   // for (int i = 0; i < 16; i++)
   //   adc_reg_callbacks[i] = NULL;
+
+  //set adc state
+  adc_state = 0xc;
 
   /* Enable End of Conversion and End of Sequence interrupts */
   ADC_ITConfig(ADC1, ADC_IT_EOC, ENABLE);
   ADC_ITConfig(ADC1, ADC_IT_EOS, ENABLE);
   ADC_ITConfig(ADC2, ADC_IT_EOC, ENABLE);
   ADC_ITConfig(ADC2, ADC_IT_EOS, ENABLE);
-  ADC_ITConfig(ADC3, ADC_IT_EOC, ENABLE);
-  ADC_ITConfig(ADC3, ADC_IT_EOS, ENABLE);
-  ADC_ITConfig(ADC4, ADC_IT_EOC, ENABLE);
-  ADC_ITConfig(ADC4, ADC_IT_EOS, ENABLE);
+  // ADC_ITConfig(ADC3, ADC_IT_EOC, ENABLE);
+  // ADC_ITConfig(ADC3, ADC_IT_EOS, ENABLE);
+  // ADC_ITConfig(ADC4, ADC_IT_EOC, ENABLE);
+  // ADC_ITConfig(ADC4, ADC_IT_EOS, ENABLE);
 
   /* Configure and enable ADC1 and ADC2 interrupt */
   NVIC_InitStructure.NVIC_IRQChannel = ADC1_2_IRQn;
@@ -393,18 +397,18 @@ void adc_init(void) {
   NVIC_Init(&NVIC_InitStructure);
 
   /* Configure and enable ADC3 interrupt */
-  NVIC_InitStructure.NVIC_IRQChannel = ADC3_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 4;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
-  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-  NVIC_Init(&NVIC_InitStructure);
+  // NVIC_InitStructure.NVIC_IRQChannel = ADC3_IRQn;
+  // NVIC_InitStructure.NVIC_IRQChannelSubPriority = 4;
+  // NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+  // NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+  // NVIC_Init(&NVIC_InitStructure);
 
   /* Configure and enable ADC4 interrupt */
-  NVIC_InitStructure.NVIC_IRQChannel = ADC4_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 5;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
-  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-  NVIC_Init(&NVIC_InitStructure);
+  // NVIC_InitStructure.NVIC_IRQChannel = ADC4_IRQn;
+  // NVIC_InitStructure.NVIC_IRQChannelSubPriority = 5;
+  // NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+  // NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+  // NVIC_Init(&NVIC_InitStructure);
 
 }
 
@@ -415,18 +419,18 @@ void adc_deinit(void) {
   //reset ADCs
   ADC_DeInit(ADC1);
   ADC_DeInit(ADC2);
-  ADC_DeInit(ADC3);
-  ADC_DeInit(ADC4);
+  // ADC_DeInit(ADC3);
+  // ADC_DeInit(ADC4);
 
   num_chan_adc1 = 0;
   num_chan_adc2 = 0;
-  num_chan_adc3 = 0;
-  num_chan_adc4 = 0;
+  // num_chan_adc3 = 0;
+  // num_chan_adc4 = 0;
   for (int i=0; i<16; i++) {
     adc_reg_callbacks1[i] = NULL;
     adc_reg_callbacks2[i] = NULL;
-    adc_reg_callbacks3[i] = NULL;
-    adc_reg_callbacks4[i] = NULL;
+    // adc_reg_callbacks3[i] = NULL;
+    // adc_reg_callbacks4[i] = NULL;
   }
 }
 
@@ -435,14 +439,14 @@ void adc_start(void) {
   /* Enable ADC1 */
   ADC_Cmd(ADC1, ENABLE);
   ADC_Cmd(ADC2, ENABLE);
-  ADC_Cmd(ADC3, ENABLE);
-  ADC_Cmd(ADC4, ENABLE);
+  // ADC_Cmd(ADC3, ENABLE);
+  // ADC_Cmd(ADC4, ENABLE);
 
   /* wait for ADRDY */
   while(!ADC_GetFlagStatus(ADC1, ADC_FLAG_RDY));
   while(!ADC_GetFlagStatus(ADC2, ADC_FLAG_RDY));
-  while(!ADC_GetFlagStatus(ADC3, ADC_FLAG_RDY));
-  while(!ADC_GetFlagStatus(ADC4, ADC_FLAG_RDY));
+  // while(!ADC_GetFlagStatus(ADC3, ADC_FLAG_RDY));
+  // while(!ADC_GetFlagStatus(ADC4, ADC_FLAG_RDY));
 
 //  /* TIM1 counter enable */
 //  TIM_Cmd(TIM1, ENABLE);
@@ -478,21 +482,21 @@ void adc_start(void) {
   /* ADC1 Start Conversion */
    ADC_StartConversion(ADC1);
    ADC_StartConversion(ADC2);
-   ADC_StartConversion(ADC3);
-   ADC_StartConversion(ADC4);
+   // ADC_StartConversion(ADC3);
+   // ADC_StartConversion(ADC4);
 }
 
 void adc_stop(void) {
   /* Disable ADC1 and ADC2 */
   ADC_StopConversion(ADC1);
   ADC_StopConversion(ADC2);
-  ADC_StopConversion(ADC3);
-  ADC_StopConversion(ADC4);
+  // ADC_StopConversion(ADC3);
+  // ADC_StopConversion(ADC4);
 
   ADC_Cmd(ADC1, DISABLE);
   ADC_Cmd(ADC2, DISABLE);
-  ADC_Cmd(ADC3, DISABLE);
-  ADC_Cmd(ADC4, DISABLE);
+  // ADC_Cmd(ADC3, DISABLE);
+  // ADC_Cmd(ADC4, DISABLE);
 }
 
 
@@ -636,11 +640,11 @@ void adc_initialize_channels() {
       if (adc_conv_order[k].STM_ADCx == ADC1) {
         num_chan_adc1++;
 
-        ADC_RegularChannelConfig(adc_conv_order[k].STM_ADCx, adc_conv_order[k].STM_ADC_chan, num_chan_adc1, ADC_SampleTime_7Cycles5);
+        ADC_RegularChannelConfig(adc_conv_order[k].STM_ADCx, adc_conv_order[k].STM_ADC_chan, num_chan_adc1, ADC_SampleTime_181Cycles5);
       } else if (adc_conv_order[k].STM_ADCx == ADC2) {
         num_chan_adc2++;
 
-        ADC_RegularChannelConfig(adc_conv_order[k].STM_ADCx, adc_conv_order[k].STM_ADC_chan, num_chan_adc2, ADC_SampleTime_7Cycles5);
+        ADC_RegularChannelConfig(adc_conv_order[k].STM_ADCx, adc_conv_order[k].STM_ADC_chan, num_chan_adc2, ADC_SampleTime_181Cycles5);
       } else if (adc_conv_order[k].STM_ADCx == ADC3) {
         num_chan_adc3++;
         
@@ -658,14 +662,14 @@ void adc_initialize_channels() {
   // enable conversion sequences for ADCs
   ADC_RegularChannelSequencerLengthConfig(ADC1, num_chan_adc1);
   ADC_RegularChannelSequencerLengthConfig(ADC2, num_chan_adc2);
-  ADC_RegularChannelSequencerLengthConfig(ADC3, num_chan_adc3);
-  ADC_RegularChannelSequencerLengthConfig(ADC4, num_chan_adc4);
+  // ADC_RegularChannelSequencerLengthConfig(ADC3, num_chan_adc3);
+  // ADC_RegularChannelSequencerLengthConfig(ADC4, num_chan_adc4);
 
   // enable ADCs
   ADC_Cmd(ADC1, ENABLE);
   ADC_Cmd(ADC2, ENABLE);
-  ADC_Cmd(ADC3, ENABLE);
-  ADC_Cmd(ADC4, ENABLE);
+  // ADC_Cmd(ADC3, ENABLE);
+  // ADC_Cmd(ADC4, ENABLE);
 }
 
 // //attach callback function to a specific channel
@@ -771,8 +775,6 @@ void ADC1_2_IRQHandler(void) {
   if(ADC_GetITStatus(ADC1, ADC_IT_EOC)) {
     data_buf1[curr_chan1] = ADC_GetConversionValue(ADC1);
     curr_chan1++;
-
-    
   }
   if(ADC_GetITStatus(ADC1, ADC_IT_EOS)) {
     curr_chan1 = 0;
@@ -804,8 +806,11 @@ void ADC1_2_IRQHandler(void) {
     adc_state |= 0x1 << 1;
 
     // call callback if all sequences finished
-    if(adc_state == 0xf) adc_reg_callback(data_buf1, data_buf2, data_buf3,
+    if(adc_state == 0xf) {
+      adc_reg_callback(data_buf1, data_buf2, data_buf3,
                                           data_buf4);
+      adc_state = 0xc;
+    }
   }
   ADC_ClearITPendingBit(ADC2, ADC_IT_EOC);
   ADC_ClearITPendingBit(ADC2, ADC_IT_EOS);
@@ -829,8 +834,11 @@ void ADC3_IRQHandler(void) {
     adc_state |= 0x1 << 2;
 
     // call callback if all sequences finished
-    if(adc_state == 0xf) adc_reg_callback(data_buf1, data_buf2, data_buf3,
+    if(adc_state == 0xf) {
+      adc_reg_callback(data_buf1, data_buf2, data_buf3,
                                           data_buf4);
+      adc_state = 0xc;
+    }
   }
   ADC_ClearITPendingBit(ADC3, ADC_IT_EOC);
   ADC_ClearITPendingBit(ADC3, ADC_IT_EOS);
