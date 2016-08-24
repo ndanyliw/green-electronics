@@ -443,6 +443,8 @@ void adc_init(void) {
   // NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
   // NVIC_Init(&NVIC_InitStructure);
 
+  ADC_DMAConfig(ADC1, ADC_DMAMode_Circular);
+
   DMA_Cmd(DMA1_Channel1, ENABLE);
   ADC_DMACmd(ADC1, ENABLE);
 
@@ -783,6 +785,7 @@ void DMA1_Channel1_IRQHandler(void) {
     // status=1;
    //Clear DMA1 interrupt pending bits
     DMA_ClearITPendingBit(DMA1_IT_GL1);
+    DMA_ClearITPendingBit(DMA1_IT_TC1);
   }
   // ADC_StartConversion(ADC1);
 }
