@@ -92,7 +92,7 @@ ADC_TypeDef *adc_bank_map[NUM_ADC] = {
   ADC4 //ADC4_13
   };
 
-ADC_TypeDef *adc_chan_map[NUM_ADC] = {
+uint8_t adc_chan_map[NUM_ADC] = {
   ADC_Channel_1, //ADC1_1
   ADC_Channel_2, //ADC1_2
   ADC_Channel_3, //ADC1_3
@@ -276,6 +276,7 @@ void adc_enable_clocks(void) {
 
   /* Configure the ADC clock */
   RCC_ADCCLKConfig(RCC_ADC12PLLCLK_Div2);
+  RCC_ADCCLKConfig(RCC_ADC34PLLCLK_Div2);
 
   /* ADC1 Periph clock enable */
   RCC_AHBPeriphClockCmd(RCC_AHBPeriph_ADC12, ENABLE);
@@ -362,10 +363,17 @@ void adc_init(void) {
   ADC_Init(ADC3, &ADC_InitStructure);
   ADC_Init(ADC4, &ADC_InitStructure);
 
-  num_channels = 0;
-  curr_chan = 0;
-  for (int i = 0; i < 16; i++)
-    adc_reg_callbacks[i] = NULL;
+  num_chan_adc1 = 0;
+  num_chan_adc2 = 0;
+  num_chan_adc3 = 0;
+  num_chan_adc4 = 0;
+  curr_chan1 = 0;
+  curr_chan2 = 0;
+  curr_chan3 = 0;
+  curr_chan4 = 0;
+
+  // for (int i = 0; i < 16; i++)
+  //   adc_reg_callbacks[i] = NULL;
 
   /* Enable End of Conversion and End of Sequence interrupts */
   ADC_ITConfig(ADC1, ADC_IT_EOC, ENABLE);
@@ -410,7 +418,10 @@ void adc_deinit(void) {
   ADC_DeInit(ADC3);
   ADC_DeInit(ADC4);
 
-  num_channels = 0;
+  num_chan_adc1 = 0;
+  num_chan_adc2 = 0;
+  num_chan_adc3 = 0;
+  num_chan_adc4 = 0;
   for (int i=0; i<16; i++) {
     adc_reg_callbacks1[i] = NULL;
     adc_reg_callbacks2[i] = NULL;
@@ -495,19 +506,19 @@ void adc_enable_channel(uint16_t chan) {
   ADC_TypeDef *sel_adc;
 
   // select appropriate ADC
-  if (chan >= ADC1_1 && chan <= ADC1_5) {
+  if (chan >= GE_ADC1_1 && chan <= GE_ADC1_5) {
     sel_adc = ADC1;
-  } else if (chan >= ADC2_1 && chan <= ADC2_5) {
+  } else if (chan >= GE_ADC2_1 && chan <= GE_ADC2_5) {
     sel_adc = ADC2;
-  } else if (chan >= ADC12_6 && chan <= ADC12_10) {
+  } else if (chan >= GE_ADC12_6 && chan <= GE_ADC12_10) {
     sel_adc = ADC1;
-  } else if (chan >= ADC2_11 && chan <= ADC2_12) {
+  } else if (chan >= GE_ADC2_11 && chan <= GE_ADC2_12) {
     sel_adc = ADC2;
-  } else if (chan >= ADC3_1 && chan <= ADC3_16) {
+  } else if (chan >= GE_ADC3_1 && chan <= GE_ADC3_16) {
     sel_adc = ADC3;
-  } else if (chan >= ADC34_6 && chan <= ADC34_11) {
+  } else if (chan >= GE_ADC34_6 && chan <= GE_ADC34_11) {
     sel_adc = ADC3;
-  } else if (chan >= ADC4_1 && chan <= ADC4_13) {
+  } else if (chan >= GE_ADC4_1 && chan <= GE_ADC4_13) {
     sel_adc = ADC4;
   } else {
     sel_adc = NULL;
@@ -530,8 +541,8 @@ void adc_enable_channel(uint16_t chan) {
 //  ADC_Cmd(ADC2, DISABLE);
 
   int adc_pin = adc_pin_map[chan];
-  int adc_gpio = _ge_pin_number[adc_pin];
-  int adc_port = _ge_pin_port[adc_pin];
+  int adc_gpio = _ge_pin_num[adc_pin];
+  GPIO_TypeDef *adc_port = _ge_pin_port[adc_pin];
 
   /* Configure ADC channel as analog input */
   GPIO_InitStructure.GPIO_Pin = adc_gpio;
@@ -662,7 +673,9 @@ void adc_initialize_channels() {
 //   adc_reg_callbacks[chan-1] = callback;
 // }
 
-void adc_callback(const 
+void adc_callback(void (*callback)(uint16_t *, uint16_t *, uint16_t *, uint16_t *)) {
+  adc_reg_callback = callback;
+}
 
 //set sampling frequency
 void adc_set_fs(float fs) {
@@ -759,7 +772,7 @@ void ADC1_2_IRQHandler(void) {
     data_buf1[curr_chan1] = ADC_GetConversionValue(ADC1);
     curr_chan1++;
 
-    ADC_ClearITPendingBit(ADC1, ADC_IT_EOC);
+    
   }
   if(ADC_GetITStatus(ADC1, ADC_IT_EOS)) {
     curr_chan1 = 0;
@@ -772,16 +785,14 @@ void ADC1_2_IRQHandler(void) {
 
     if(adc_state == 0xf) adc_reg_callback(data_buf1, data_buf2, data_buf3,
                                           data_buf4);
-
-    ADC_ClearITPendingBit(ADC1, ADC_IT_EOS);
   }
+  ADC_ClearITPendingBit(ADC1, ADC_IT_EOC);
+  ADC_ClearITPendingBit(ADC1, ADC_IT_EOS);
 
   //ADC 2
   if(ADC_GetITStatus(ADC2, ADC_IT_EOC)) {
     data_buf2[curr_chan2] = ADC_GetConversionValue(ADC2);
     curr_chan2++;
-
-    ADC_ClearITPendingBit(ADC2, ADC_IT_EOC);
   }
   if(ADC_GetITStatus(ADC2, ADC_IT_EOS)) {
     curr_chan2 = 0;
@@ -795,9 +806,9 @@ void ADC1_2_IRQHandler(void) {
     // call callback if all sequences finished
     if(adc_state == 0xf) adc_reg_callback(data_buf1, data_buf2, data_buf3,
                                           data_buf4);
-
-    ADC_ClearITPendingBit(ADC2, ADC_IT_EOS);
   }
+  ADC_ClearITPendingBit(ADC2, ADC_IT_EOC);
+  ADC_ClearITPendingBit(ADC2, ADC_IT_EOS);
 }
 
 
@@ -807,8 +818,6 @@ void ADC3_IRQHandler(void) {
   if(ADC_GetITStatus(ADC3, ADC_IT_EOC)) {
     data_buf3[curr_chan3] = ADC_GetConversionValue(ADC3);
     curr_chan3++;
-
-    ADC_ClearITPendingBit(ADC3, ADC_IT_EOC);
   }
   if(ADC_GetITStatus(ADC3, ADC_IT_EOS)) {
     curr_chan3 = 0;
@@ -822,9 +831,10 @@ void ADC3_IRQHandler(void) {
     // call callback if all sequences finished
     if(adc_state == 0xf) adc_reg_callback(data_buf1, data_buf2, data_buf3,
                                           data_buf4);
-
-    ADC_ClearITPendingBit(ADC3, ADC_IT_EOS);
   }
+  ADC_ClearITPendingBit(ADC3, ADC_IT_EOC);
+  ADC_ClearITPendingBit(ADC3, ADC_IT_EOS);
+
 }
 
 //handler for ADC3 interupt 
@@ -833,8 +843,6 @@ void ADC4_IRQHandler(void) {
   if(ADC_GetITStatus(ADC4, ADC_IT_EOC)) {
     data_buf4[curr_chan4] = ADC_GetConversionValue(ADC4);
     curr_chan4++;
-
-    ADC_ClearITPendingBit(ADC4, ADC_IT_EOC);
   }
   if(ADC_GetITStatus(ADC4, ADC_IT_EOS)) {
     curr_chan4 = 0;
@@ -848,8 +856,10 @@ void ADC4_IRQHandler(void) {
     // call callback if all sequences finished
     if(adc_state == 0xf) adc_reg_callback(data_buf1, data_buf2, data_buf3,
                                           data_buf4);
-
-    ADC_ClearITPendingBit(ADC4, ADC_IT_EOS);
   }
+  ADC_ClearITPendingBit(ADC4, ADC_IT_EOC);
+  ADC_ClearITPendingBit(ADC4, ADC_IT_EOS);
+
+
 }
 

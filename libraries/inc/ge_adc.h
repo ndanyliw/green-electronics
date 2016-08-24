@@ -46,7 +46,7 @@ typedef enum ADC_CHAN
 // physical pin mapping of ADC channels
 extern GPIOPin adc_pin_map[NUM_ADC];
 
-extern GPIO_TypeDef *adc_bank_map[NUM_ADC];
+extern ADC_TypeDef *adc_bank_map[NUM_ADC];
 extern uint8_t adc_chan_map[NUM_ADC];
 
 // structure to keep track of ADC channel parameters
@@ -85,6 +85,9 @@ void (*adc_reg_callbacks2[16])(uint32_t);
 void (*adc_reg_callbacks3[16])(uint32_t);
 void (*adc_reg_callbacks4[16])(uint32_t);
 
+//registered callback
+void (*adc_reg_callback)(uint16_t *, uint16_t *, uint16_t *, uint16_t *);
+
 //initialize ADC settings
 void adc_init(void);
 void adc_deinit(void); //resets all ADC settings
@@ -97,6 +100,9 @@ void adc_stop(void);
 void adc_enable_channel(uint16_t chan);
 //void adc_disable_channel(uint16_t chan, uint16_t rank);
 
+void adc_enable_channels(ADC_CHAN_Type *channels, uint16_t num_conv);
+void adc_initialize_channels();
+
 ////set channel priority
 //void adc_set_chan_rank(uint16_t chan, uint16_t rank);
 
@@ -107,7 +113,7 @@ void adc_enable_channel(uint16_t chan);
 void adc_set_fs(float fs);
 
 //attach callback function to a specific channel
-void adc_callback(const int chan, void (*callback)(uint32_t));
+void adc_callback(void (*callback)(uint16_t *, uint16_t *, uint16_t *, uint16_t *));
 
 #ifdef __cplusplus
 }
