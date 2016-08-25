@@ -9,7 +9,6 @@
 
 #include "ge_gpio.h"
 
-
 /**
  * @brief Initializes the Discovery board's GPIO
  * @details Initializes all of the STM32 GPIO banks. The
