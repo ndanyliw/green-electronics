@@ -64,7 +64,8 @@ GE_ADC_chan_info adc_conv_order[NUM_ADC];
 
 // ADC_CHAN_Type adc_conv_order[NUM_ADC];
 
-volatile unsigned short ADC_Val[2];
+// volatile unsigned short ADC_Val[2];
+volatile unsigned short adc_readings[NUM_ADC];
 
 //saved data buffer
 uint32_t data_buf[16];
@@ -88,7 +89,7 @@ void (*adc_reg_callbacks3[16])(uint32_t);
 void (*adc_reg_callbacks4[16])(uint32_t);
 
 //registered callback
-void (*adc_reg_callback)(uint16_t *, uint16_t *, uint16_t *, uint16_t *);
+void (*adc_reg_callback)(uint16_t *);
 
 //initialize ADC settings
 void adc_init(void);
@@ -115,7 +116,7 @@ void adc_initialize_channels();
 void adc_set_fs(float fs);
 
 //attach callback function to a specific channel
-void adc_callback(void (*callback)(uint16_t *, uint16_t *, uint16_t *, uint16_t *));
+void adc_callback(void (*callback)(uint16_t *));
 
 #ifdef __cplusplus
 }

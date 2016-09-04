@@ -142,13 +142,22 @@ int calibration_value_adc1, calibration_value_adc2, calibration_value_adc3,
 int num_channels1, num_channels2, num_channels3, num_channels4;
 __IO int curr_chan1, curr_chan2, curr_chan3, curr_chan4;
 
-// state of ADCs (each bit is a flag with 0 = ready and 1 = done)
+// state of ADC conversions (each bit is a flag with 0 = ready and 1 = done)
 __IO uint8_t adc_state;
+// state that indicates all conversions have finished
+uint8_t adc_val_rdy_state;
 // flag to mark data overflow
 __IO uint8_t _ge_adc_ovf;
 
 // arrays to hold conversion values from ADCs
 __IO uint16_t data_buf1[16], data_buf2[16], data_buf3[16], data_buf4[16];
+
+// arrays to handle results in the correct order
+__IO uint16_t adc_conversions[NUM_ADC];
+__IO uint16_t adc1_conv_map[16], adc2_conv_map[16], adc3_conv_map[16], adc4_conv_map[16];
+
+// total number of conversions
+int _num_conv;
 
 /*
  * This function initializes the ADCs in the STM32F3. This includes setting
@@ -281,6 +290,9 @@ void adc_enable_clocks(void) {
   /* Enable DMA1 */
   RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
 
+  /* Enable DMA2 */
+  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA2, ENABLE);
+
   /* ADC1 Periph clock enable */
   RCC_AHBPeriphClockCmd(RCC_AHBPeriph_ADC12, ENABLE);
   // RCC_AHBPeriphClockCmd(RCC_AHBPeriph_ADC34, ENABLE);
@@ -298,8 +310,9 @@ void adc_init(void) {
   NVIC_InitTypeDef   NVIC_InitStructure;
   __IO uint16_t calibration_value = 0;
 
-  //enable DMA
-  DMA_Cmd(DMA1_Channel1, ENABLE);
+  // //enable DMA
+  // DMA_Cmd(DMA1_Channel1, ENABLE);
+  // DMA_Cmd(DMA2_Channel1, ENABLE);
 
   //enable clocks
   adc_enable_clocks();
@@ -382,13 +395,14 @@ void adc_init(void) {
   // for (int i = 0; i < 16; i++)
   //   adc_reg_callbacks[i] = NULL;
 
-  /* DMA configuration */ 
-  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
+  // /* DMA configuration */ 
+  // RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
   
+  // Enable DMA for ADC1
   DMA_InitTypeDef DMA_InitStructure;
   DMA_InitStructure.DMA_BufferSize = 2;
   DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
-  DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)&ADC_Val[0];
+  DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)&adc_readings[0];
   DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord;
   DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
   DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
@@ -409,8 +423,23 @@ void adc_init(void) {
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
   NVIC_Init(&NVIC_InitStructure);
 
+  // Enable DMA for ADC2
+  DMA_InitStructure.DMA_BufferSize = 2;
+  DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
+  DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)&adc_readings[10];
+  DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord;
+  DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+  DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
+  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC1->DR;
+  DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
+  DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+  DMA_InitStructure.DMA_Priority = DMA_Priority_High;
+
+  DMA_Init(DMA2_Channel1, &DMA_InitStructure);
+
   //set adc state
-  adc_state = 0xc;
+  adc_state = 0x0;
+  adc_val_rdy_state = 0x0;
 
   /* Enable End of Conversion and End of Sequence interrupts */
   // ADC_ITConfig(ADC1, ADC_IT_EOC, ENABLE);
@@ -448,7 +477,10 @@ void adc_init(void) {
   DMA_Cmd(DMA1_Channel1, ENABLE);
   ADC_DMACmd(ADC1, ENABLE);
 
+  ADC_DMAConfig(ADC2, ADC_DMAMode_Circular);
 
+  DMA_Cmd(DMA2_Channel1, ENABLE);
+  ADC_DMACmd(ADC2, ENABLE);
 
 }
 
@@ -680,17 +712,41 @@ void adc_initialize_channels() {
       if (adc_conv_order[k].STM_ADCx == ADC1) {
         num_chan_adc1++;
 
-        ADC_RegularChannelConfig(adc_conv_order[k].STM_ADCx, adc_conv_order[k].STM_ADC_chan, num_chan_adc1, ADC_SampleTime_181Cycles5);
+        // store index to save result
+        adc1_conv_map[num_chan_adc1-1] = k;
+
+        // mark that ADC1 is used
+        adc_val_rdy_state |= 0x1;
+
+        ADC_RegularChannelConfig(adc_conv_order[k].STM_ADCx, adc_conv_order[k].STM_ADC_chan, num_chan_adc1, ADC_SampleTime_7Cycles5);
       } else if (adc_conv_order[k].STM_ADCx == ADC2) {
         num_chan_adc2++;
 
-        ADC_RegularChannelConfig(adc_conv_order[k].STM_ADCx, adc_conv_order[k].STM_ADC_chan, num_chan_adc2, ADC_SampleTime_181Cycles5);
+        // mark that ADC1 is used
+        adc_val_rdy_state |= 0x2;
+
+        // store index to save result
+        adc2_conv_map[num_chan_adc2-1] = k;
+
+        ADC_RegularChannelConfig(adc_conv_order[k].STM_ADCx, adc_conv_order[k].STM_ADC_chan, num_chan_adc2, ADC_SampleTime_7Cycles5);
       } else if (adc_conv_order[k].STM_ADCx == ADC3) {
         num_chan_adc3++;
+
+        // mark that ADC1 is used
+        adc_val_rdy_state |= 0x4;
+
+        // store index to save result
+        adc3_conv_map[num_chan_adc3-1] = k;
         
         ADC_RegularChannelConfig(adc_conv_order[k].STM_ADCx, adc_conv_order[k].STM_ADC_chan, num_chan_adc3, ADC_SampleTime_7Cycles5);
       } else if (adc_conv_order[k].STM_ADCx == ADC4) {
         num_chan_adc4++;
+
+        // mark that ADC1 is used
+        adc_val_rdy_state |= 0x1;
+
+        // store index to save result
+        adc4_conv_map[num_chan_adc4-1] = k;
 
         ADC_RegularChannelConfig(adc_conv_order[k].STM_ADCx, adc_conv_order[k].STM_ADC_chan, num_chan_adc4, ADC_SampleTime_7Cycles5);
       } else {
@@ -705,6 +761,38 @@ void adc_initialize_channels() {
   // ADC_RegularChannelSequencerLengthConfig(ADC3, num_chan_adc3);
   // ADC_RegularChannelSequencerLengthConfig(ADC4, num_chan_adc4);
 
+  // setup DMAs
+
+  // DMA for ADC1
+  DMA_InitTypeDef DMA_InitStructure;
+  DMA_InitStructure.DMA_BufferSize = num_chan_adc1;
+  DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
+  DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)&data_buf1[0];
+  DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord;
+  DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+  DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
+  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC1->DR;
+  DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
+  DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+  DMA_InitStructure.DMA_Priority = DMA_Priority_High;
+
+  DMA_Init(DMA1_Channel1, &DMA_InitStructure);
+
+
+  // DMA for ADC2
+  DMA_InitStructure.DMA_BufferSize = num_chan_adc2;
+  DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
+  DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)&data_buf2[0];
+  DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord;
+  DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+  DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
+  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC2->DR;
+  DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
+  DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+  DMA_InitStructure.DMA_Priority = DMA_Priority_High;
+
+  DMA_Init(DMA2_Channel1, &DMA_InitStructure);
+
   // enable ADCs
   ADC_Cmd(ADC1, ENABLE);
   ADC_Cmd(ADC2, ENABLE);
@@ -717,7 +805,11 @@ void adc_initialize_channels() {
 //   adc_reg_callbacks[chan-1] = callback;
 // }
 
-void adc_callback(void (*callback)(uint16_t *, uint16_t *, uint16_t *, uint16_t *)) {
+// void adc_callback(void (*callback)(uint16_t *, uint16_t *, uint16_t *, uint16_t *)) {
+//   adc_reg_callback = callback;
+// }
+
+void adc_callback(void (*callback)(uint16_t *)) {
   adc_reg_callback = callback;
 }
 
@@ -783,145 +875,185 @@ void DMA1_Channel1_IRQHandler(void) {
   if(DMA_GetITStatus(DMA1_IT_TC1))
   {
     // status=1;
-   //Clear DMA1 interrupt pending bits
+    //Clear DMA1 interrupt pending bits
     DMA_ClearITPendingBit(DMA1_IT_GL1);
     DMA_ClearITPendingBit(DMA1_IT_TC1);
+
+    // callback to handle ADC1 results
+    for (int k = 0; k < num_chan_adc1; k++) {
+      adc_conversions[adc1_conv_map[k]] = data_buf1[k];
+    }
+
+    adc_state |= 0x1;
+
+    // if all ADCs finished trigger callback
+    if (adc_state == adc_val_rdy_state) {
+      adc_state = 0x0;
+      adc_reg_callback(adc_conversions);
+    }
   }
   // ADC_StartConversion(ADC1);
 }
 
-void ADC1_2_IRQHandler(void) {
-  // //ADC 1
-  // if (ADC_GetITStatus(ADC1, ADC_IT_EOC)) {
-  //   data_buf[curr_chan] = ADC_GetDualModeConversionValue(ADC1);
-  //   curr_chan++;
-  // }
-  // if (ADC_GetITStatus(ADC1, ADC_IT_EOS)) {
-  //   curr_chan = 0;
-  //   //sequence has finished. now need to send data to appropriate callbacks
-  //   for (int i=0; i<num_channels; i++) {
-  //     int chan = chan_order[i];
-  //     //pass data to registered callback
-  //     if (adc_reg_callbacks[chan-1])
-  //       adc_reg_callbacks[chan-1](data_buf[i]);
-  //   }
-  // }
+void DMA2_Channel1_IRQHandler(void) {
+  // adc_reg_callback(ADC_Val);
+  // ADC_StartConversion(ADC1);
+  //Test on DMA1 Channel1 Transfer Complete interrupt
+  if(DMA_GetITStatus(DMA2_IT_TC1))
+  {
+    // status=1;
+    //Clear DMA1 interrupt pending bits
+    DMA_ClearITPendingBit(DMA2_IT_GL1);
+    DMA_ClearITPendingBit(DMA2_IT_TC1);
 
-  // ADC_ClearITPendingBit(ADC1, ADC_IT_EOC);
-  // ADC_ClearITPendingBit(ADC1, ADC_IT_EOS);
-//  //ADC 2
-//  if (ADC_GetITStatus(ADC2, ADC_IT_EOC)) {
-//    int data = ADC_GetConversionValue(ADC2);
-//    ADC_ClearITPendingBit(ADC2, ADC_IT_EOC);
-//  }
-//  if (ADC_GetITStatus(ADC2, ADC_IT_EOS)) {
-//    //sequence has finished. now need to send data to appropriate callbacks
-//    for (int i=0; i<num_channels; i++) {
-//      int chan = chan_order[i];
-//      //pass data to registered callback
-//      if (adc_reg_callbacks[chan])
-//        adc_reg_callbacks[chan](data_buf[i]);
-//    }
-//    ADC_ClearITPendingBit(ADC2, ADC_IT_EOS);
-//  }
+    // callback to handle ADC1 results
+    for (int k = 0; k < num_chan_adc2; k++) {
+      adc_conversions[adc2_conv_map[k]] = data_buf2[k];
+    }
 
-  //ADC 1
-  if(ADC_GetITStatus(ADC1, ADC_IT_EOC)) {
-    data_buf1[curr_chan1] = ADC_GetConversionValue(ADC1);
-    curr_chan1++;
-  }
-  if(ADC_GetITStatus(ADC1, ADC_IT_EOS)) {
-    curr_chan1 = 0;
+    adc_state |= 0x2;
 
-    // check for overflow
-    if(adc_state == 0xf) _ge_adc_ovf = 1;
-
-    // mark sequence as finished
-    adc_state |= 0x1 << 0;
-
-    if(adc_state == 0xf) adc_reg_callback(data_buf1, data_buf2, data_buf3,
-                                          data_buf4);
-  }
-  ADC_ClearITPendingBit(ADC1, ADC_IT_EOC);
-  ADC_ClearITPendingBit(ADC1, ADC_IT_EOS);
-
-  //ADC 2
-  if(ADC_GetITStatus(ADC2, ADC_IT_EOC)) {
-    data_buf2[curr_chan2] = ADC_GetConversionValue(ADC2);
-    curr_chan2++;
-  }
-  if(ADC_GetITStatus(ADC2, ADC_IT_EOS)) {
-    curr_chan2 = 0;
-
-    // check for overflow
-    if(adc_state == 0xf) _ge_adc_ovf = 1;
-
-    // mark sequence as finished
-    adc_state |= 0x1 << 1;
-
-    // call callback if all sequences finished
-    if(adc_state == 0xf) {
-      adc_reg_callback(data_buf1, data_buf2, data_buf3,
-                                          data_buf4);
-      adc_state = 0xc;
+    // if all ADCs finished trigger callback
+    if (adc_state == adc_val_rdy_state) {
+      adc_state = 0x0;
+      adc_reg_callback(adc_conversions);
     }
   }
-  ADC_ClearITPendingBit(ADC2, ADC_IT_EOC);
-  ADC_ClearITPendingBit(ADC2, ADC_IT_EOS);
+  // ADC_StartConversion(ADC1);
 }
 
+// void ADC1_2_IRQHandler(void) {
+//   // //ADC 1
+//   // if (ADC_GetITStatus(ADC1, ADC_IT_EOC)) {
+//   //   data_buf[curr_chan] = ADC_GetDualModeConversionValue(ADC1);
+//   //   curr_chan++;
+//   // }
+//   // if (ADC_GetITStatus(ADC1, ADC_IT_EOS)) {
+//   //   curr_chan = 0;
+//   //   //sequence has finished. now need to send data to appropriate callbacks
+//   //   for (int i=0; i<num_channels; i++) {
+//   //     int chan = chan_order[i];
+//   //     //pass data to registered callback
+//   //     if (adc_reg_callbacks[chan-1])
+//   //       adc_reg_callbacks[chan-1](data_buf[i]);
+//   //   }
+//   // }
 
-//handler for ADC3 interupt 
-void ADC3_IRQHandler(void) {
-  //ADC 3
-  if(ADC_GetITStatus(ADC3, ADC_IT_EOC)) {
-    data_buf3[curr_chan3] = ADC_GetConversionValue(ADC3);
-    curr_chan3++;
-  }
-  if(ADC_GetITStatus(ADC3, ADC_IT_EOS)) {
-    curr_chan3 = 0;
+//   // ADC_ClearITPendingBit(ADC1, ADC_IT_EOC);
+//   // ADC_ClearITPendingBit(ADC1, ADC_IT_EOS);
+// //  //ADC 2
+// //  if (ADC_GetITStatus(ADC2, ADC_IT_EOC)) {
+// //    int data = ADC_GetConversionValue(ADC2);
+// //    ADC_ClearITPendingBit(ADC2, ADC_IT_EOC);
+// //  }
+// //  if (ADC_GetITStatus(ADC2, ADC_IT_EOS)) {
+// //    //sequence has finished. now need to send data to appropriate callbacks
+// //    for (int i=0; i<num_channels; i++) {
+// //      int chan = chan_order[i];
+// //      //pass data to registered callback
+// //      if (adc_reg_callbacks[chan])
+// //        adc_reg_callbacks[chan](data_buf[i]);
+// //    }
+// //    ADC_ClearITPendingBit(ADC2, ADC_IT_EOS);
+// //  }
 
-    // check for overflow
-    if(adc_state == 0xf) _ge_adc_ovf = 1;
+//   //ADC 1
+//   if(ADC_GetITStatus(ADC1, ADC_IT_EOC)) {
+//     data_buf1[curr_chan1] = ADC_GetConversionValue(ADC1);
+//     curr_chan1++;
+//   }
+//   if(ADC_GetITStatus(ADC1, ADC_IT_EOS)) {
+//     curr_chan1 = 0;
 
-    // mark sequence as finished
-    adc_state |= 0x1 << 2;
+//     // check for overflow
+//     if(adc_state == 0xf) _ge_adc_ovf = 1;
 
-    // call callback if all sequences finished
-    if(adc_state == 0xf) {
-      adc_reg_callback(data_buf1, data_buf2, data_buf3,
-                                          data_buf4);
-      adc_state = 0xc;
-    }
-  }
-  ADC_ClearITPendingBit(ADC3, ADC_IT_EOC);
-  ADC_ClearITPendingBit(ADC3, ADC_IT_EOS);
+//     // mark sequence as finished
+//     adc_state |= 0x1 << 0;
 
-}
+//     if(adc_state == 0xf) adc_reg_callback(data_buf1, data_buf2, data_buf3,
+//                                           data_buf4);
+//   }
+//   ADC_ClearITPendingBit(ADC1, ADC_IT_EOC);
+//   ADC_ClearITPendingBit(ADC1, ADC_IT_EOS);
 
-//handler for ADC3 interupt 
-void ADC4_IRQHandler(void) {
-  //ADC 4
-  if(ADC_GetITStatus(ADC4, ADC_IT_EOC)) {
-    data_buf4[curr_chan4] = ADC_GetConversionValue(ADC4);
-    curr_chan4++;
-  }
-  if(ADC_GetITStatus(ADC4, ADC_IT_EOS)) {
-    curr_chan4 = 0;
+//   //ADC 2
+//   if(ADC_GetITStatus(ADC2, ADC_IT_EOC)) {
+//     data_buf2[curr_chan2] = ADC_GetConversionValue(ADC2);
+//     curr_chan2++;
+//   }
+//   if(ADC_GetITStatus(ADC2, ADC_IT_EOS)) {
+//     curr_chan2 = 0;
 
-    // check for overflow
-    if(adc_state == 0xf) _ge_adc_ovf = 1;
+//     // check for overflow
+//     if(adc_state == 0xf) _ge_adc_ovf = 1;
 
-    // mark sequence as finished
-    adc_state |= 0x1 << 3;
+//     // mark sequence as finished
+//     adc_state |= 0x1 << 1;
 
-    // call callback if all sequences finished
-    if(adc_state == 0xf) adc_reg_callback(data_buf1, data_buf2, data_buf3,
-                                          data_buf4);
-  }
-  ADC_ClearITPendingBit(ADC4, ADC_IT_EOC);
-  ADC_ClearITPendingBit(ADC4, ADC_IT_EOS);
+//     // call callback if all sequences finished
+//     if(adc_state == 0xf) {
+//       adc_reg_callback(data_buf1, data_buf2, data_buf3,
+//                                           data_buf4);
+//       adc_state = 0xc;
+//     }
+//   }
+//   ADC_ClearITPendingBit(ADC2, ADC_IT_EOC);
+//   ADC_ClearITPendingBit(ADC2, ADC_IT_EOS);
+// }
 
 
-}
+// //handler for ADC3 interupt 
+// void ADC3_IRQHandler(void) {
+//   //ADC 3
+//   if(ADC_GetITStatus(ADC3, ADC_IT_EOC)) {
+//     data_buf3[curr_chan3] = ADC_GetConversionValue(ADC3);
+//     curr_chan3++;
+//   }
+//   if(ADC_GetITStatus(ADC3, ADC_IT_EOS)) {
+//     curr_chan3 = 0;
+
+//     // check for overflow
+//     if(adc_state == 0xf) _ge_adc_ovf = 1;
+
+//     // mark sequence as finished
+//     adc_state |= 0x1 << 2;
+
+//     // call callback if all sequences finished
+//     if(adc_state == 0xf) {
+//       adc_reg_callback(data_buf1, data_buf2, data_buf3,
+//                                           data_buf4);
+//       adc_state = 0xc;
+//     }
+//   }
+//   ADC_ClearITPendingBit(ADC3, ADC_IT_EOC);
+//   ADC_ClearITPendingBit(ADC3, ADC_IT_EOS);
+
+// }
+
+// //handler for ADC3 interupt 
+// void ADC4_IRQHandler(void) {
+//   //ADC 4
+//   if(ADC_GetITStatus(ADC4, ADC_IT_EOC)) {
+//     data_buf4[curr_chan4] = ADC_GetConversionValue(ADC4);
+//     curr_chan4++;
+//   }
+//   if(ADC_GetITStatus(ADC4, ADC_IT_EOS)) {
+//     curr_chan4 = 0;
+
+//     // check for overflow
+//     if(adc_state == 0xf) _ge_adc_ovf = 1;
+
+//     // mark sequence as finished
+//     adc_state |= 0x1 << 3;
+
+//     // call callback if all sequences finished
+//     if(adc_state == 0xf) adc_reg_callback(data_buf1, data_buf2, data_buf3,
+//                                           data_buf4);
+//   }
+//   ADC_ClearITPendingBit(ADC4, ADC_IT_EOC);
+//   ADC_ClearITPendingBit(ADC4, ADC_IT_EOS);
+
+
+// }
 
