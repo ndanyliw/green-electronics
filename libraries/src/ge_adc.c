@@ -437,6 +437,16 @@ void adc_init(void) {
 
   DMA_Init(DMA2_Channel1, &DMA_InitStructure);
 
+  // Enable DMA2 Channel Transfer Complete interrupt
+  DMA_ITConfig(DMA2_Channel1, DMA_IT_TC, ENABLE);
+
+  //Enable DMA1 channel IRQ Channel */
+  NVIC_InitStructure.NVIC_IRQChannel = DMA2_Channel1_IRQn;
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+  NVIC_Init(&NVIC_InitStructure);
+
   //set adc state
   adc_state = 0x0;
   adc_val_rdy_state = 0x0;
