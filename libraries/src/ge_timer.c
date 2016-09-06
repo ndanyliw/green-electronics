@@ -55,35 +55,51 @@ int timer_init() {
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
 
   //setup TIM3
-  TIM_TimeBaseInitTypeDef TIM3_base;
-  TIM_TimeBaseStructInit(&TIM3_base);
-  if (_ge_tim_period <= 65535) {
-    TIM3_base.TIM_Period = _ge_tim_period - 1;
-    TIM3_base.TIM_Prescaler = 0;
-  } else {
-    // we want the minimum number of counts to accurately get the correct period
-    uint16_t presc = (_ge_tim_period >> 16);
-    TIM3_base.TIM_Prescaler = presc;
-    TIM3_base.TIM_Period = (_ge_tim_period/presc) - 1;
-  }
-  TIM3_base.TIM_ClockDivision = TIM_CKD_DIV1;
-  TIM3_base.TIM_CounterMode = TIM_CounterMode_Up;
-  TIM3_base.TIM_RepetitionCounter = 0x00;
-  TIM_TimeBaseInit(TIM3, &TIM3_base);
+  // TIM_TimeBaseInitTypeDef TIM3_base;
+  // TIM_TimeBaseStructInit(&TIM3_base);
+  // if (_ge_tim_period <= 65535) {
+  //   TIM3_base.TIM_Period = _ge_tim_period - 1;
+  //   TIM3_base.TIM_Prescaler = 0;
+  // } else {
+  //   // we want the minimum number of counts to accurately get the correct period
+  //   uint16_t presc = (_ge_tim_period >> 16);
+  //   TIM3_base.TIM_Prescaler = presc;
+  //   TIM3_base.TIM_Period = (_ge_tim_period/presc) - 1;
+  // }
+  // TIM3_base.TIM_ClockDivision = TIM_CKD_DIV1;
+  // TIM3_base.TIM_CounterMode = TIM_CounterMode_Up;
+  // TIM3_base.TIM_RepetitionCounter = 0x00;
+  // // TIM_TimeBaseInit(TIM3, &TIM3_base);
 
   //setup interrupt
+  //enable timer update interrupt
+  TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
+
   NVIC_InitTypeDef NVIC_init_struct;
   NVIC_init_struct.NVIC_IRQChannel = TIM3_IRQn;
-  NVIC_init_struct.NVIC_IRQChannelSubPriority = 0;
-  NVIC_init_struct.NVIC_IRQChannelPreemptionPriority = 0;
+  NVIC_init_struct.NVIC_IRQChannelSubPriority = 0x0f;
+  NVIC_init_struct.NVIC_IRQChannelPreemptionPriority = 0x0f;
   NVIC_init_struct.NVIC_IRQChannelCmd = ENABLE;
   NVIC_Init(&NVIC_init_struct);
 
+  // TIM_TimeBaseInitTypeDef TIM3_base;
+  // TIM_TimeBaseStructInit(&TIM3_base);
+  // if (_ge_tim_period <= 65535) {
+  //   TIM3_base.TIM_Period = _ge_tim_period - 1;
+  //   TIM3_base.TIM_Prescaler = 0;
+  // } else {
+  //   // we want the minimum number of counts to accurately get the correct period
+  //   uint16_t presc = (_ge_tim_period >> 16);
+  //   TIM3_base.TIM_Prescaler = presc;
+  //   TIM3_base.TIM_Period = (_ge_tim_period/(presc + 1)) - 1;
+  // }
+  // TIM3_base.TIM_ClockDivision = TIM_CKD_DIV1;
+  // TIM3_base.TIM_CounterMode = TIM_CounterMode_Up;
+  // TIM3_base.TIM_RepetitionCounter = 0x00;
+  // TIM_TimeBaseInit(TIM3, &TIM3_base);
+
   //enable counter
   TIM_Cmd(TIM3, ENABLE);
-
-  //enable timer update interrupt
-  TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
 
   return 0;
 }
@@ -119,7 +135,7 @@ int timer_deinit() {
  * @param type SINGLE_SHOT or PERIODIC
  * @return Timer ID of associate timer or error code.
  */
-timer_id_t timer_register(uint32_t ms, void (*function)(void), uint8_t type) {
+timer_id_t timer_register(uint32_t period, void (*function)(void), uint8_t type) {
   //check if there are less than the max number of timers registered
   if (_ge_tim_num_timers == _GE_MAX_TIMERS)
     return _GE_TIM_ERROR;
@@ -128,7 +144,7 @@ timer_id_t timer_register(uint32_t ms, void (*function)(void), uint8_t type) {
   _ge_tim_num_timers++;
   for (int i = 0; i < _GE_MAX_TIMERS; i++) {
     if (_ge_tim_periods[i] == 0) {
-      _ge_tim_periods[i] = ms;
+      _ge_tim_periods[i] = period;
       _ge_tim_callbacks[i] = function;
       _ge_tim_type[i] = type;
       _ge_tim_offsets[i] = _ge_tim_count;
@@ -175,15 +191,27 @@ int timer_stop(timer_id_t timer) {
   return 0;
 }
 
+/**
+ * @brief Set the period of a registered timer.
+ * @details Sets the period of a registered timer. This change
+ * takes effect immediately
+ * 
+ * @param timer timer ID of the timer to modify
+ * @param period new period of the timer (in counts)
+ */
+void timer_set_period(timer_id_t timer, uint32_t period) {
+  _ge_tim_periods[timer] = period;
+}
+
 
 /**
- * @brief Sets the period of one count for the timers
- * @details Sets the period of one count for the timers. This is referenced to
+ * @brief Sets the minimum timestep for the timers
+ * @details Sets the minimum timestep for the timers. This is referenced to
  * 72 MHz
  * 
  * @param counts Number of clock counts per period
  */
-void timer_set_period(uint32_t counts) {
+void timer_set_timestep(uint32_t counts) {
   _ge_tim_period = counts;
 
   //setup TIM3
@@ -196,7 +224,7 @@ void timer_set_period(uint32_t counts) {
     // we want the minimum number of counts to accurately get the correct period
     uint16_t presc = (_ge_tim_period >> 16);
     TIM3_base.TIM_Prescaler = presc;
-    TIM3_base.TIM_Period = (_ge_tim_period/presc) - 1;
+    TIM3_base.TIM_Period = (_ge_tim_period/(presc + 1)) - 1;
   }
   TIM3_base.TIM_ClockDivision = TIM_CKD_DIV1;
   TIM3_base.TIM_CounterMode = TIM_CounterMode_Up;
@@ -210,7 +238,7 @@ void timer_set_period(uint32_t counts) {
  * @details Get the number of clock pulses per timing unit
  * @return The period of the timer (relative to 72MHz)
  */
-uint32_t timer_get_period() {
+uint32_t timer_get_timestep() {
   return _ge_tim_period;
 }
 

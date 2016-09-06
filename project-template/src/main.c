@@ -9,6 +9,7 @@
  * @date  09.2015
  */
 #include "ge_libs.h"
+#include <stdio.h>
 
 
 void setup_led_gpio() {

@@ -8,7 +8,7 @@
 #include "ge_adc.h"
 
 //globals
-GPIOPin adc_pin_map[NUM_ADC] = {
+GPIOPin adc_pin_map[GE_NUM_ADC] = {
   PA0, //ADC1_1
   PA1, //ADC1_2
   PA2, //ADC1_3
@@ -50,7 +50,7 @@ GPIOPin adc_pin_map[NUM_ADC] = {
   PD9 //ADC4_13
   };
 
-ADC_TypeDef *adc_bank_map[NUM_ADC] = {
+ADC_TypeDef *adc_bank_map[GE_NUM_ADC] = {
   ADC1, //ADC1_1
   ADC1, //ADC1_2
   ADC1, //ADC1_3
@@ -92,7 +92,7 @@ ADC_TypeDef *adc_bank_map[NUM_ADC] = {
   ADC4 //ADC4_13
   };
 
-uint8_t adc_chan_map[NUM_ADC] = {
+uint8_t adc_chan_map[GE_NUM_ADC] = {
   ADC_Channel_1, //ADC1_1
   ADC_Channel_2, //ADC1_2
   ADC_Channel_3, //ADC1_3
@@ -150,10 +150,10 @@ uint8_t adc_val_rdy_state;
 __IO uint8_t _ge_adc_ovf;
 
 // arrays to hold conversion values from ADCs
-__IO uint16_t data_buf1[16], data_buf2[16], data_buf3[16], data_buf4[16];
+__IO uint32_t data_buf1[16], data_buf2[16], data_buf3[16], data_buf4[16];
 
 // arrays to handle results in the correct order
-__IO uint16_t adc_conversions[NUM_ADC];
+__IO uint16_t adc_conversions[GE_NUM_ADC];
 __IO uint16_t adc1_conv_map[16], adc2_conv_map[16], adc3_conv_map[16], adc4_conv_map[16];
 
 // total number of conversions
@@ -376,7 +376,7 @@ void adc_init(void) {
   ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
   ADC_InitStructure.ADC_OverrunMode = ADC_OverrunMode_Disable;
   ADC_InitStructure.ADC_AutoInjMode = ADC_AutoInjec_Disable;
-  ADC_InitStructure.ADC_NbrOfRegChannel = 0;
+  ADC_InitStructure.ADC_NbrOfRegChannel = 3;
 
   ADC_Init(ADC1, &ADC_InitStructure);
   ADC_Init(ADC2, &ADC_InitStructure);
@@ -400,10 +400,10 @@ void adc_init(void) {
   
   // Enable DMA for ADC1
   DMA_InitTypeDef DMA_InitStructure;
-  DMA_InitStructure.DMA_BufferSize = 2;
+  DMA_InitStructure.DMA_BufferSize = 3;
   DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
-  DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)&adc_readings[0];
-  DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord;
+  DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)&data_buf1[0];
+  DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Word;
   DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
   DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
   DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC1->DR;
@@ -418,19 +418,19 @@ void adc_init(void) {
 
   //Enable DMA1 channel IRQ Channel */
   NVIC_InitStructure.NVIC_IRQChannel = DMA1_Channel1_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
   NVIC_Init(&NVIC_InitStructure);
 
   // Enable DMA for ADC2
-  DMA_InitStructure.DMA_BufferSize = 2;
+  DMA_InitStructure.DMA_BufferSize = 1;
   DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
-  DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)&adc_readings[10];
-  DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord;
+  DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)&data_buf2[0];
+  DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Word;
   DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
   DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
-  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC1->DR;
+  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC2->DR;
   DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
   DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
   DMA_InitStructure.DMA_Priority = DMA_Priority_High;
@@ -442,8 +442,8 @@ void adc_init(void) {
 
   //Enable DMA1 channel IRQ Channel */
   NVIC_InitStructure.NVIC_IRQChannel = DMA2_Channel1_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 2;
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
   NVIC_Init(&NVIC_InitStructure);
 
@@ -709,7 +709,7 @@ void adc_enable_channels(ADC_CHAN_Type *channels, uint16_t num_conv) {
 //info list and initializes all the appropriate GPIO and ADC info. checks to see
 //if the channels are supposed to be enabled
 void adc_initialize_channels() {
-  for (int k = 0; k < NUM_ADC; k++) {
+  for (int k = 0; k < GE_NUM_ADC; k++) {
     if (adc_conv_order[k].enabled) {
       GPIOPin pin = adc_conv_order[k].pin;
 
@@ -726,39 +726,39 @@ void adc_initialize_channels() {
         adc1_conv_map[num_chan_adc1-1] = k;
 
         // mark that ADC1 is used
-        adc_val_rdy_state |= 0x1;
+        // adc_val_rdy_state |= 0x1;
 
-        ADC_RegularChannelConfig(adc_conv_order[k].STM_ADCx, adc_conv_order[k].STM_ADC_chan, num_chan_adc1, ADC_SampleTime_7Cycles5);
+        ADC_RegularChannelConfig(adc_conv_order[k].STM_ADCx, adc_conv_order[k].STM_ADC_chan, num_chan_adc1, ADC_SampleTime_19Cycles5);
       } else if (adc_conv_order[k].STM_ADCx == ADC2) {
         num_chan_adc2++;
 
         // mark that ADC1 is used
-        adc_val_rdy_state |= 0x2;
+        // adc_val_rdy_state |= 0x2;
 
         // store index to save result
         adc2_conv_map[num_chan_adc2-1] = k;
 
-        ADC_RegularChannelConfig(adc_conv_order[k].STM_ADCx, adc_conv_order[k].STM_ADC_chan, num_chan_adc2, ADC_SampleTime_7Cycles5);
+        ADC_RegularChannelConfig(adc_conv_order[k].STM_ADCx, adc_conv_order[k].STM_ADC_chan, num_chan_adc2, ADC_SampleTime_19Cycles5);
       } else if (adc_conv_order[k].STM_ADCx == ADC3) {
         num_chan_adc3++;
 
         // mark that ADC1 is used
-        adc_val_rdy_state |= 0x4;
+        // adc_val_rdy_state |= 0x4;
 
         // store index to save result
         adc3_conv_map[num_chan_adc3-1] = k;
         
-        ADC_RegularChannelConfig(adc_conv_order[k].STM_ADCx, adc_conv_order[k].STM_ADC_chan, num_chan_adc3, ADC_SampleTime_7Cycles5);
+        ADC_RegularChannelConfig(adc_conv_order[k].STM_ADCx, adc_conv_order[k].STM_ADC_chan, num_chan_adc3, ADC_SampleTime_19Cycles5);
       } else if (adc_conv_order[k].STM_ADCx == ADC4) {
         num_chan_adc4++;
 
         // mark that ADC1 is used
-        adc_val_rdy_state |= 0x1;
+        // adc_val_rdy_state |= 0x1;
 
         // store index to save result
         adc4_conv_map[num_chan_adc4-1] = k;
 
-        ADC_RegularChannelConfig(adc_conv_order[k].STM_ADCx, adc_conv_order[k].STM_ADC_chan, num_chan_adc4, ADC_SampleTime_7Cycles5);
+        ADC_RegularChannelConfig(adc_conv_order[k].STM_ADCx, adc_conv_order[k].STM_ADC_chan, num_chan_adc4, ADC_SampleTime_19Cycles5);
       } else {
         return;
       }
@@ -773,41 +773,49 @@ void adc_initialize_channels() {
 
   // setup DMAs
 
-  // DMA for ADC1
-  DMA_InitTypeDef DMA_InitStructure;
-  DMA_InitStructure.DMA_BufferSize = num_chan_adc1;
-  DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
-  DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)&data_buf1[0];
-  DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord;
-  DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
-  DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
-  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC1->DR;
-  DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
-  DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
-  DMA_InitStructure.DMA_Priority = DMA_Priority_High;
+  // DMA_Cmd(DMA1_Channel1, DISABLE);
+  // DMA_Cmd(DMA1_Channel2, DISABLE);
 
-  DMA_Init(DMA1_Channel1, &DMA_InitStructure);
+  // // DMA for ADC1
+  // DMA_InitTypeDef DMA_InitStructure;
+  // DMA_InitStructure.DMA_BufferSize = num_chan_adc1;
+  // DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
+  // DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)&data_buf1[0];
+  // DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Word;
+  // DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+  // DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
+  // DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC1->DR;
+  // DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
+  // DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+  // DMA_InitStructure.DMA_Priority = DMA_Priority_High;
+
+  // DMA_Init(DMA1_Channel1, &DMA_InitStructure);
 
 
-  // DMA for ADC2
-  DMA_InitStructure.DMA_BufferSize = num_chan_adc2;
-  DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
-  DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)&data_buf2[0];
-  DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord;
-  DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
-  DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
-  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC2->DR;
-  DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
-  DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
-  DMA_InitStructure.DMA_Priority = DMA_Priority_High;
+  // // DMA for ADC2
+  // DMA_InitStructure.DMA_BufferSize = num_chan_adc2;
+  // DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
+  // DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)&data_buf2[0];
+  // DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Word;
+  // DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+  // DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
+  // DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC2->DR;
+  // DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
+  // DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+  // DMA_InitStructure.DMA_Priority = DMA_Priority_High;
 
-  DMA_Init(DMA2_Channel1, &DMA_InitStructure);
+  // DMA_Init(DMA2_Channel1, &DMA_InitStructure);
 
   // enable ADCs
-  ADC_Cmd(ADC1, ENABLE);
-  ADC_Cmd(ADC2, ENABLE);
+  // ADC_Cmd(ADC1, ENABLE);
+  // ADC_Cmd(ADC2, ENABLE);
   // ADC_Cmd(ADC3, ENABLE);
   // ADC_Cmd(ADC4, ENABLE);
+
+  // DMA_Cmd(DMA1_Channel1, DISABLE);
+  // DMA_Cmd(DMA1_Channel2, DISABLE);
+
+  adc_state = 0x0;
 }
 
 // //attach callback function to a specific channel
@@ -891,16 +899,18 @@ void DMA1_Channel1_IRQHandler(void) {
 
     // callback to handle ADC1 results
     for (int k = 0; k < num_chan_adc1; k++) {
-      adc_conversions[adc1_conv_map[k]] = data_buf1[k];
+      adc_conversions[adc1_conv_map[k]] = (uint16_t)(data_buf1[k]);
     }
 
     adc_state |= 0x1;
 
     // if all ADCs finished trigger callback
-    if (adc_state == adc_val_rdy_state) {
+    if (adc_state == 0x3) {
       adc_state = 0x0;
       adc_reg_callback(adc_conversions);
     }
+
+    // DMA_SetCurrDataCounter(DMA1_Channel1, num_chan_adc1);
   }
   // ADC_StartConversion(ADC1);
 }
@@ -918,16 +928,18 @@ void DMA2_Channel1_IRQHandler(void) {
 
     // callback to handle ADC1 results
     for (int k = 0; k < num_chan_adc2; k++) {
-      adc_conversions[adc2_conv_map[k]] = data_buf2[k];
+      adc_conversions[adc2_conv_map[k]] = (uint16_t)(data_buf2[k]);
     }
 
     adc_state |= 0x2;
 
     // if all ADCs finished trigger callback
-    if (adc_state == adc_val_rdy_state) {
+    if (adc_state == 0x3) {
       adc_state = 0x0;
       adc_reg_callback(adc_conversions);
     }
+
+    // DMA_SetCurrDataCounter(DMA2_Channel1, num_chan_adc2);
   }
   // ADC_StartConversion(ADC1);
 }

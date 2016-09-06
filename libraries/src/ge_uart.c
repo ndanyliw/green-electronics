@@ -114,7 +114,11 @@ uint8_t ge_uart_get(void) {
 }
 
 int ge_uart_available() {
-  return !(USART_GetFlagStatus(USART1, USART_FLAG_RXNE) == RESET);
+  #ifdef BUFFERED
+    return !(BufferIsEmpty(U1Rx));
+  #else
+    return !(USART_GetFlagStatus(USART1, USART_FLAG_RXNE) == RESET);
+  #endif
 }
 
 void ge_uart_write(char *str, int len) {

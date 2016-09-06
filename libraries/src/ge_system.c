@@ -8,6 +8,7 @@
  */
 
 #include "ge_system.h"
+#include "ge_libs.h"
 
 __IO uint32_t _ge_delay_time = 0;
 __IO uint32_t _ge_usb_timeout = 100;
@@ -23,6 +24,26 @@ void ge_init() {
   RCC_ClocksTypeDef RCC_clocks;
   RCC_GetClocksFreq(&RCC_clocks);
   SysTick_Config(RCC_clocks.HCLK_Frequency / GE_TICKS_S);
+
+  // initialize GPIO
+  gpio_init();
+
+  // initialize ADC library
+  adc_init();
+
+  // initialize USART library
+  ge_uart_init(115200);
+
+
+
+  // initialize timer library
+  timer_init();
+
+  // initialize pwm library
+  pwm_init();
+
+  // initialize lcd library
+  lcd_init();
 }
 
 
