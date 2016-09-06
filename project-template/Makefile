@@ -6,8 +6,11 @@
 # all the files will be generated with this name (main.elf, main.bin, main.hex, etc)
 PROJ_NAME=main
 
+# location of green-electronics folder
+EE155_HOME=$(HOME)/Documents/green-electronics
+
 # location of custom EE155 libraries
-EE155_LIB=../libraries
+EE155_LIB=$(EE155_HOME)/libraries
 
 # Location of the Libraries folder from the STM32F0xx Standard Peripheral Library
 STD_PERIPH_LIB=Libraries

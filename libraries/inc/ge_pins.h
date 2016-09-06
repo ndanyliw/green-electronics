@@ -111,10 +111,20 @@ static GPIO_TypeDef* _ge_pin_port[] = {
 #endif
 
 //Pushbuttons
-#define GE_PBTN1        PD11
-#define GE_PBTN2        PD10
-#define GE_PBTN3        PD13
-#define GE_PBTN4        PD12
+#define GE_PBTN1        PC0
+#define GE_PBTN2        PC1
+#define GE_PBTN3        PC2
+#define GE_PBTN4        PC3
+
+#define GE_LED1         PD9
+#define GE_LED2         PD8
+#define GE_LED3         PD11
+#define GE_LED4         PD10
+
+#define GE_DIG1         PB8
+#define GE_DIG2         PB9
+#define GE_DIG3         PB14
+#define GE_DIG4         PB15
 
 
 //ADCs

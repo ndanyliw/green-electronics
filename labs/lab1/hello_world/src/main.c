@@ -112,6 +112,11 @@ void change_state() {
       printf("ADC Demo\n");
       break;
     case USART_DEMO:
+      lcd_clear();
+      lcd_goto(0, 0);
+      lcd_puts("USART Demo");
+      lcd_goto(0, 1);
+
       printf("USART Demo. Echo user input.\n");
       break;
     default:
@@ -148,10 +153,10 @@ int main(void)
   led_speed = false;
 
   // Initialize the USER button as an input
-  gpio_setup_pin(DISC_PBTN, GPIO_INPUT, false, false);
+  gpio_setup_pin(GE_PBTN2, GPIO_INPUT, false, false);
 
   // Initialize PBTN1
-  gpio_setup_pin(GE_PBTN1, GPIO_INPUT, false, true);
+  gpio_setup_pin(GE_PBTN1, GPIO_INPUT, false, false);
 
   // Initialize USART
   // ge_uart_init(115200);
@@ -163,9 +168,9 @@ int main(void)
   // lcd_init();
 
   // // Print Hello World
-  // lcd_clear();
-  // lcd_goto(0, 0);
-  // lcd_puts("Hello, World!");
+  lcd_clear();
+  lcd_goto(0, 0);
+  lcd_puts("Hello, World!");
 
 
   // initialize ADCs
@@ -217,7 +222,7 @@ int main(void)
        */
       case LED_DEMO:
         //check if button depressed
-        if (gpio_read_pin(DISC_PBTN)) {
+        if (!gpio_read_pin(GE_PBTN2)) {
           if (led_speed) {
             timer_set_period(led_timer, 500);
             led_speed = false;
@@ -227,7 +232,7 @@ int main(void)
           }
 
           // wait for button to be released
-          while (gpio_read_pin(DISC_PBTN));
+          while (!gpio_read_pin(GE_PBTN2));
         }
         break;
 
@@ -256,6 +261,7 @@ int main(void)
         if (ge_uart_available()) {
           uint8_t c = ge_uart_get();
           printf("%c\n", c);
+          lcd_putc(c);
         }
         break;
 
