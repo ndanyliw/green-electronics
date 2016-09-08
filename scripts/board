@@ -1,0 +1,5 @@
+#!/bin/bash
+
+port=$1
+
+picocom -b 115200 --imap lfcrlf "$port"
