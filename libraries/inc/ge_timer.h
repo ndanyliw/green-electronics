@@ -27,7 +27,7 @@
 //Defines
 #define _GE_MAX_TIMERS 16
 //minimum time step for timer (1 ms)
-#define _GE_TIM_PERIOD 720000
+#define _GE_TIM_PERIOD 72000
 //error code if timer fails to initialize
 #define _GE_TIM_ERROR -1
 
@@ -46,10 +46,12 @@ typedef int timer_id_t;
 // public interface functions
 int timer_init();
 int timer_deinit();
-timer_id_t timer_register(uint32_t ms, void (*function)(void), uint8_t type);
+timer_id_t timer_register(uint32_t period, void (*function)(void), uint8_t type);
 int timer_start(timer_id_t timer);
 int timer_stop(timer_id_t timer);
-void timer_set_period(uint32_t counts);
+void timer_set_period(timer_id_t timer, uint32_t period);
+void timer_set_timestep(uint32_t counts);
+
 uint32_t timer_get_period();
 
 

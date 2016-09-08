@@ -27,7 +27,7 @@
 /**
  * Enumerate ADC channels mapped to external pins on the STM32 Discovery
  */
-#define NUM_ADC 39
+#define GE_NUM_ADC 39
 
 
 
@@ -44,10 +44,10 @@ typedef enum ADC_CHAN
 } ADC_CHAN_Type;
 
 // physical pin mapping of ADC channels
-extern GPIOPin adc_pin_map[NUM_ADC];
+extern GPIOPin adc_pin_map[GE_NUM_ADC];
 
-extern ADC_TypeDef *adc_bank_map[NUM_ADC];
-extern uint8_t adc_chan_map[NUM_ADC];
+extern ADC_TypeDef *adc_bank_map[GE_NUM_ADC];
+extern uint8_t adc_chan_map[GE_NUM_ADC];
 
 // structure to keep track of ADC channel parameters
 typedef struct
@@ -60,11 +60,12 @@ typedef struct
   uint16_t period;
 } GE_ADC_chan_info;
 
-GE_ADC_chan_info adc_conv_order[NUM_ADC];
+GE_ADC_chan_info adc_conv_order[GE_NUM_ADC];
 
-// ADC_CHAN_Type adc_conv_order[NUM_ADC];
+// ADC_CHAN_Type adc_conv_order[GE_NUM_ADC];
 
-volatile unsigned short ADC_Val[2];
+// volatile unsigned short ADC_Val[2];
+volatile unsigned short adc_readings[GE_NUM_ADC];
 
 //saved data buffer
 uint32_t data_buf[16];
@@ -88,7 +89,7 @@ void (*adc_reg_callbacks3[16])(uint32_t);
 void (*adc_reg_callbacks4[16])(uint32_t);
 
 //registered callback
-void (*adc_reg_callback)(uint16_t *, uint16_t *, uint16_t *, uint16_t *);
+void (*adc_reg_callback)(uint16_t *);
 
 //initialize ADC settings
 void adc_init(void);
@@ -115,7 +116,7 @@ void adc_initialize_channels();
 void adc_set_fs(float fs);
 
 //attach callback function to a specific channel
-void adc_callback(void (*callback)(uint16_t *, uint16_t *, uint16_t *, uint16_t *));
+void adc_callback(void (*callback)(uint16_t *));
 
 #ifdef __cplusplus
 }

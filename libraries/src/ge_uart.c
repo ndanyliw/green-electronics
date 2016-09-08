@@ -30,21 +30,21 @@ void ge_uart_init(uint32_t baud) {
 
   USART_ClockInitTypeDef USART_ClockInitStructure;
   //enable bus clocks
-  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
+  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOC, ENABLE);
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
 
   //Set USART1 Tx (PC.4) as AF push-pull
   //Set USART1 Rx (PC.5) as input floating
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9 | GPIO_Pin_10;
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4 | GPIO_Pin_5;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
   GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
   GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);
+  GPIO_Init(GPIOC, &GPIO_InitStructure);
 
   // set alternate functions
-  GPIO_PinAFConfig(GPIOA, GPIO_PinSource9, GPIO_AF_7);
-  GPIO_PinAFConfig(GPIOA, GPIO_PinSource10, GPIO_AF_7);
+  GPIO_PinAFConfig(GPIOC, GPIO_PinSource4, GPIO_AF_7);
+  GPIO_PinAFConfig(GPIOC, GPIO_PinSource5, GPIO_AF_7);
   
   USART_StructInit(&USART_InitStructure);
   USART_ClockStructInit(&USART_ClockInitStructure);
@@ -114,7 +114,11 @@ uint8_t ge_uart_get(void) {
 }
 
 int ge_uart_available() {
-  return !(USART_GetFlagStatus(USART1, USART_FLAG_RXNE) == RESET);
+  #ifdef BUFFERED
+    return !(BufferIsEmpty(U1Rx));
+  #else
+    return !(USART_GetFlagStatus(USART1, USART_FLAG_RXNE) == RESET);
+  #endif
 }
 
 void ge_uart_write(char *str, int len) {
