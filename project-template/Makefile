@@ -7,7 +7,7 @@
 PROJ_NAME=main
 
 # location of green-electronics folder
-EE155_HOME=$(HOME)/Documents/green-electronics
+EE155_HOME=$(HOME)/green-electronics
 
 # location of custom EE155 libraries
 EE155_LIB=$(EE155_HOME)/libraries
