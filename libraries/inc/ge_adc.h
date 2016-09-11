@@ -43,6 +43,17 @@ typedef enum ADC_CHAN
   GE_ADC4_1, GE_ADC4_2, GE_ADC4_3, GE_ADC4_4, GE_ADC4_5, GE_ADC4_12, GE_ADC4_13 
 } ADC_CHAN_Type;
 
+// GE breakout board
+// A1 - instrumentation amp (default gain = 5) - PA1
+#define GE_A1           GE_ADC1_2
+// A2 - instrumentation amp (defualt gain = 5) - PA2
+#define GE_A2           GE_ADC1_3
+// A3 - PA3
+#define GE_A3           GE_ADC1_4
+// A4 - PA4
+#define GE_A4           GE_ADC2_1
+
+
 // physical pin mapping of ADC channels
 extern GPIOPin adc_pin_map[GE_NUM_ADC];
 

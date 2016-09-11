@@ -44,6 +44,9 @@ void ge_init() {
 
   // initialize lcd library
   lcd_init();
+
+  // initialize EEPROM
+  eeprom_init();
 }
 
 
