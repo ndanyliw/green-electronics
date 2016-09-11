@@ -28,4 +28,4 @@ void calibrate_voltage();
 void calibrate_current();
 
 //ADC callback function
-void my_adc_callback(uint32_t data);
+void my_adc_callback(uint16_t *data);

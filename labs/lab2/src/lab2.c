@@ -86,7 +86,7 @@ void meter_display() {
  * @brief Callback at end of ADC conversion
  * @details Called at the end of the ADC conversions
  */
-void my_adc_callback(uint32_t data) {
-  voltage_reading = (uint16_t) (data & 0x0000ffff);
-  current_reading = (uint16_t) (data >> 16);
+void my_adc_callback(uint16_t *data) {
+  voltage_reading = (uint16_t) data[0];
+  current_reading = (uint16_t) data[1];
 }

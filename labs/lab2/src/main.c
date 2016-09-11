@@ -49,9 +49,11 @@ void setup_buttons() {
 
 void start_conversion() {
   adc_set_fs(1000);
-  adc_enable_channel(1);
+  // Initialize ADC channels (A3 - voltage reading, A1 - current reading)
+  ADC_CHAN_Type chan_to_convert[2] = {GE_A3, GE_A1};
+  adc_enable_channels(chan_to_convert, 2);
 
-  adc_callback(1, &my_adc_callback);
+  adc_callback(&my_adc_callback);
   adc_start();
 }
 
@@ -59,14 +61,7 @@ int main() {
   //Initialize systems
   ge_init();
 
-  lcd_init();
-  adc_init();
-
-  gpio_init();
-
   setup_buttons();
-
-  timer_init();
 
   timer_id_t state_tim = timer_register(50, &change_state, GE_PERIODIC);
 
