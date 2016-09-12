@@ -110,37 +110,39 @@ static GPIO_TypeDef* _ge_pin_port[] = {
 };
 #endif
 
-//Pushbuttons
+// Pushbuttons
 #define GE_PBTN1        PC0
 #define GE_PBTN2        PC1
 #define GE_PBTN3        PC2
 #define GE_PBTN4        PC3
 
+// LEDs
 #define GE_LED1         PD9
 #define GE_LED2         PD8
 #define GE_LED3         PD11
 #define GE_LED4         PD10
 
+// GPIO
 #define GE_DIG1         PB8
 #define GE_DIG2         PB9
 #define GE_DIG3         PB14
 #define GE_DIG4         PB15
 
+// PWM
+#define GE_PWM1         PA8
+#define GE_PWM2         PA9
+#define GE_PWM3         PA10
 
-//ADCs
-#define GE_ADC1         PA1
-#define GE_ADC2         PA4
+//ADCs (Defined in ge_adc.h)
+// // A1 - instrumentation amp (default gain = 5) - PA1
+// #define GE_A1           GE_ADC1_2
+// // A2 - instrumentation amp (defualt gain = 5) - PA2
+// #define GE_A2           GE_ADC1_3
+// // A3 - PA3
+// #define GE_A3           GE_ADC1_4
+// // A4 - PA4
+// #define GE_A4           GE_ADC2_1
 
-//5V tolerant lines (redefine to match silkscreen)
-//PA8, PA9, PA10, PB0, PB8, PB9, PC10, PC11
-#define PA8_5V          PA8
-#define PA9_5V          PA9
-#define PA10_5V         PA10
-#define PB0_5V          PB0
-#define PB8_5V          PB8
-#define PB9_5V          PB9
-#define PC10_5V         PC10
-#define PC11_5V         PC11
 
 //Discovery board specific pins
 //USER pushbutton
