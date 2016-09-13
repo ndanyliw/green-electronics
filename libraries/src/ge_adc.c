@@ -310,12 +310,66 @@ void adc_init(void) {
   NVIC_InitTypeDef   NVIC_InitStructure;
   __IO uint16_t calibration_value = 0;
 
-  // //enable DMA
-  // DMA_Cmd(DMA1_Channel1, ENABLE);
-  // DMA_Cmd(DMA2_Channel1, ENABLE);
-
   //enable clocks
   adc_enable_clocks();
+
+  // //enable DMA
+  // Enable DMA for ADC1
+  // DMA_DeInit(DMA1_Channel1);
+  DMA_InitTypeDef DMA_InitStructure;
+  DMA_StructInit(&DMA_InitStructure);
+  DMA_InitStructure.DMA_BufferSize = 3;
+  DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
+  DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)&data_buf1[0];
+  DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Word;
+  DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+  DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
+  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC1->DR;
+  DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
+  DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+  DMA_InitStructure.DMA_Priority = DMA_Priority_High;
+
+  DMA_Init(DMA1_Channel1, &DMA_InitStructure);
+
+  // Enable DMA1 Channel Transfer Complete interrupt
+  DMA_ITConfig(DMA1_Channel1, DMA_IT_TC, ENABLE);
+
+  //Enable DMA1 channel IRQ Channel */
+  NVIC_InitStructure.NVIC_IRQChannel = DMA1_Channel1_IRQn;
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
+  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+  NVIC_Init(&NVIC_InitStructure);
+
+  DMA_Cmd(DMA1_Channel1, ENABLE);
+
+  // Enable DMA for ADC2
+  // DMA_DeInit(DMA2_Channel1);
+  DMA_StructInit(&DMA_InitStructure);
+  DMA_InitStructure.DMA_BufferSize = 1;
+  DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
+  DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)&data_buf2[0];
+  DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Word;
+  DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+  DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
+  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC2->DR;
+  DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
+  DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+  DMA_InitStructure.DMA_Priority = DMA_Priority_High;
+
+  DMA_Init(DMA2_Channel1, &DMA_InitStructure);
+
+  // Enable DMA2 Channel Transfer Complete interrupt
+  DMA_ITConfig(DMA2_Channel1, DMA_IT_TC, ENABLE);
+
+  //Enable DMA1 channel IRQ Channel */
+  NVIC_InitStructure.NVIC_IRQChannel = DMA2_Channel1_IRQn;
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 2;
+  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+  NVIC_Init(&NVIC_InitStructure);
+
+  ADC_DMACmd(ADC2, ENABLE);
 
   ADC_StructInit(&ADC_InitStructure);
 
@@ -398,54 +452,7 @@ void adc_init(void) {
   // /* DMA configuration */ 
   // RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
   
-  // Enable DMA for ADC1
-  DMA_InitTypeDef DMA_InitStructure;
-  DMA_InitStructure.DMA_BufferSize = 3;
-  DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
-  DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)&data_buf1[0];
-  DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Word;
-  DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
-  DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
-  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC1->DR;
-  DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
-  DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
-  DMA_InitStructure.DMA_Priority = DMA_Priority_High;
 
-  DMA_Init(DMA1_Channel1, &DMA_InitStructure);
-
-  // Enable DMA1 Channel Transfer Complete interrupt
-  DMA_ITConfig(DMA1_Channel1, DMA_IT_TC, ENABLE);
-
-  //Enable DMA1 channel IRQ Channel */
-  NVIC_InitStructure.NVIC_IRQChannel = DMA1_Channel1_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
-  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-  NVIC_Init(&NVIC_InitStructure);
-
-  // Enable DMA for ADC2
-  DMA_InitStructure.DMA_BufferSize = 1;
-  DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
-  DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)&data_buf2[0];
-  DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Word;
-  DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
-  DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
-  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC2->DR;
-  DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
-  DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
-  DMA_InitStructure.DMA_Priority = DMA_Priority_High;
-
-  DMA_Init(DMA2_Channel1, &DMA_InitStructure);
-
-  // Enable DMA2 Channel Transfer Complete interrupt
-  DMA_ITConfig(DMA2_Channel1, DMA_IT_TC, ENABLE);
-
-  //Enable DMA1 channel IRQ Channel */
-  NVIC_InitStructure.NVIC_IRQChannel = DMA2_Channel1_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 2;
-  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-  NVIC_Init(&NVIC_InitStructure);
 
   //set adc state
   adc_state = 0x0;
@@ -483,14 +490,10 @@ void adc_init(void) {
   // NVIC_Init(&NVIC_InitStructure);
 
   ADC_DMAConfig(ADC1, ADC_DMAMode_Circular);
-
-  DMA_Cmd(DMA1_Channel1, ENABLE);
   ADC_DMACmd(ADC1, ENABLE);
 
   ADC_DMAConfig(ADC2, ADC_DMAMode_Circular);
-
   DMA_Cmd(DMA2_Channel1, ENABLE);
-  ADC_DMACmd(ADC2, ENABLE);
 
 }
 
