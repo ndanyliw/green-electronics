@@ -62,16 +62,16 @@ void ic_init() {
   //enable interrupts
   TIM_ITConfig(TIM4, TIM_IT_Update, ENABLE);
 
-  //enable PD12 as input capture pin
+  //enable PB10 as input capture pin
   GPIO_InitTypeDef gpio_struct;
 
   gpio_struct.GPIO_Mode = GPIO_Mode_IN;
-  gpio_struct.GPIO_Pin = _ge_pin_num[PD12];
+  gpio_struct.GPIO_Pin = _ge_pin_num[PB10];
   gpio_struct.GPIO_Speed = GPIO_Speed_50MHz;
 
-  GPIO_Init(_ge_pin_port[PD12], &gpio_struct);
+  GPIO_Init(_ge_pin_port[PB10], &gpio_struct);
 
-  //TODO - attach interrupt to PD12
+  //TODO - attach interrupt to PB10
   EXTI_InitTypeDef EXTI_InitStruct;
 
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
@@ -86,8 +86,8 @@ void ic_init() {
 
   NVIC_Init(&NVIC_InitStructure);
 
-  /* PD12 is connected to EXTI_Line12 */
-  EXTI_InitStruct.EXTI_Line = EXTI_Line12;
+  /* PB10 is connected to EXTI_Line10 */
+  EXTI_InitStruct.EXTI_Line = EXTI_Line10;
   /* Enable interrupt */
   EXTI_InitStruct.EXTI_LineCmd = ENABLE;
   /* Interrupt mode */
@@ -144,8 +144,8 @@ void TIM4_IRQHandler(void) {
 // Handler for external interrupt
 void EXTI15_10_IRQHandler(void) {
   /* Make sure that interrupt flag is set */
-  if (EXTI_GetITStatus(EXTI_Line12) != RESET) {
-    /* Do your stuff when PD12 is changed */
+  if (EXTI_GetITStatus(EXTI_Line10) != RESET) {
+    /* Do your stuff when PB10 is changed */
     //check if overflowed
     if (_ge_ic_ovf) {
       //set count as 0
@@ -161,6 +161,6 @@ void EXTI15_10_IRQHandler(void) {
     TIM_SetCounter(TIM4, 0);
 
     /* Clear interrupt flag */
-    EXTI_ClearITPendingBit(EXTI_Line12);
+    EXTI_ClearITPendingBit(EXTI_Line10);
   }
 }
