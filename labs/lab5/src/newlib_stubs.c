@@ -8,19 +8,27 @@
 #include <sys/stat.h>
 #include <sys/times.h>
 #include <sys/unistd.h>
+#include <stdint.h>
 #include "stm32f30x_usart.h"
+#include "ge_uart.h"
 
+extern uint32_t __get_MSP(void);
+
+/* Standard IO device handles. */
+#define STDIN  0
+#define STDOUT 1
+#define STDERR 2
 
 #ifndef STDOUT_USART
-#define STDOUT_USART 2
+#define STDOUT_USART 1
 #endif
 
 #ifndef STDERR_USART
-#define STDERR_USART 2
+#define STDERR_USART 1
 #endif
 
 #ifndef STDIN_USART
-#define STDIN_USART 2
+#define STDIN_USART 1
 #endif
 
 #undef errno
@@ -28,16 +36,19 @@ extern int errno;
 
 /*
  environ
- A pointer to a list of environment variables and their values. 
+ A pointer to a list of environment variables and their values.
  For a minimal environment, this empty list is adequate:
  */
 char *__env[1] = { 0 };
 char **environ = __env;
 
-int _write(int file, char *ptr, int len);
-
+int _write(int file, char *ptr, int len, int mode);
+int _read(int file, char *ptr, int len, int mode);
+int _fstat(int file, struct stat *st);
+int _getpid(void);
+int _fork(void);
 void _exit(int status) {
-    _write(1, "exit", 4);
+    _write(1, "exit", 4, 0);
     while (1) {
         ;
     }
@@ -59,7 +70,7 @@ int _execve(char *name, char **argv, char **env) {
  Create a new process. Minimal implementation (for a system without processes):
  */
 
-int _fork() {
+int _fork(void) {
     errno = EAGAIN;
     return -1;
 }
@@ -79,7 +90,7 @@ int _fstat(int file, struct stat *st) {
  Process-ID; this is sometimes used to generate strings unlikely to conflict with other processes. Minimal implementation, for a system without processes:
  */
 
-int _getpid() {
+int _getpid(void) {
     return 1;
 }
 
@@ -147,7 +158,7 @@ caddr_t _sbrk(int incr) {
 char * stack = (char*) __get_MSP();
      if (heap_end + incr >  stack)
      {
-         _write (STDERR_FILENO, "Heap and stack collision\n", 25);
+        // _write (STDERR_FILENO, "Heap and stack collision\n", 25);
          errno = ENOMEM;
          return  (caddr_t) -1;
          //abort ();
@@ -158,6 +169,7 @@ char * stack = (char*) __get_MSP();
 
 }
 
+
 /*
  read
  Read a character to a file. `libc' subroutines will use this system routine for input from all files, including stdin
@@ -165,21 +177,22 @@ char * stack = (char*) __get_MSP();
  */
 
 
-int _read(int file, char *ptr, int len) {
+int _read(int file, char *ptr, int len, int mode) {
     int n;
     int num = 0;
     switch (file) {
     case STDIN_FILENO:
         for (n = 0; n < len; n++) {
 #if   STDIN_USART == 1
-            while ((USART1->ISR & USART_FLAG_RXNE) == (uint16_t)RESET) {}
-            char c = (char)(USART1->TDR & (uint16_t)0x01FF);
+            char c = ge_uart_get();
+            //while ((USART1->SR & USART_FLAG_RXNE) == (uint16_t)RESET) {}
+            //char c = (char)(USART1->DR & (uint16_t)0x01FF);
 #elif STDIN_USART == 2
-            while ((USART2->ISR & USART_FLAG_RXNE) == (uint16_t) RESET) {}
-            char c = (char) (USART2->TDR & (uint16_t) 0x01FF);
+            while ((USART2->SR & USART_FLAG_RXNE) == (uint16_t) RESET) {}
+            char c = (char) (USART2->DR & (uint16_t) 0x01FF);
 #elif STDIN_USART == 3
-            while ((USART3->ISR & USART_FLAG_RXNE) == (uint16_t)RESET) {}
-            char c = (char)(USART3->TDR & (uint16_t)0x01FF);
+            while ((USART3->SR & USART_FLAG_RXNE) == (uint16_t)RESET) {}
+            char c = (char)(USART3->DR & (uint16_t)0x01FF);
 #endif
             *ptr++ = c;
             num++;
@@ -235,36 +248,40 @@ int _wait(int *status) {
  Write a character to a file. `libc' subroutines will use this system routine for output to all files, including stdout
  Returns -1 on error or number of bytes sent
  */
-int _write(int file, char *ptr, int len) {
+int _write(int file, char *ptr, int len, int mode) {
     int n;
     switch (file) {
     case STDOUT_FILENO: /*stdout*/
         for (n = 0; n < len; n++) {
 #if STDOUT_USART == 1
-            while ((USART1->ISR & USART_FLAG_TC) == (uint16_t)RESET) {}
-            USART1->TDR = (*ptr++ & (uint16_t)0x01FF);
+            ge_uart_put(*(const char *)ptr++);
+            // ge_uart_put(*ptr++ & (uint16_t)0x01FF);
+            //while ((USART1->SR & USART_FLAG_TC) == (uint16_t)RESET) {}
+            //USART1->DR = (*ptr++ & (uint16_t)0x01FF);
 #elif  STDOUT_USART == 2
-            while ((USART2->ISR & USART_FLAG_TC) == (uint16_t) RESET) {
+            while ((USART2->SR & USART_FLAG_TC) == (uint16_t) RESET) {
             }
-            USART2->TDR = (*ptr++ & (uint16_t) 0x01FF);
+            USART2->DR = *(ptr++);
+            // USART2->DR = (*ptr++ & (uint16_t) 0x01FF);
 #elif  STDOUT_USART == 3
-            while ((USART3->ISR & USART_FLAG_TC) == (uint16_t)RESET) {}
-            USART3->TDR = (*ptr++ & (uint16_t)0x01FF);
+            while ((USART3->SR & USART_FLAG_TC) == (uint16_t)RESET) {}
+            USART3->DR = *(ptr++);
+            // USART3->DR = (*ptr++ & (uint16_t)0x01FF);
 #endif
         }
         break;
     case STDERR_FILENO: /* stderr */
         for (n = 0; n < len; n++) {
 #if STDERR_USART == 1
-            while ((USART1->ISR & USART_FLAG_TC) == (uint16_t)RESET) {}
-            USART1->TDR = (*ptr++ & (uint16_t)0x01FF);
+            ge_uart_put(*(const char *)ptr++);
+            // ge_uart_put(*ptr++ & (uint16_t)0x01FF);
 #elif  STDERR_USART == 2
-            while ((USART2->ISR & USART_FLAG_TC) == (uint16_t) RESET) {
+            while ((USART2->SR & USART_FLAG_TC) == (uint16_t) RESET) {
             }
-            USART2->TDR = (*ptr++ & (uint16_t) 0x01FF);
+            USART2->DR = (*ptr++ & (uint16_t) 0x01FF);
 #elif  STDERR_USART == 3
-            while ((USART3->ISR & USART_FLAG_TC) == (uint16_t)RESET) {}
-            USART3->TDR = (*ptr++ & (uint16_t)0x01FF);
+            while ((USART3->SR & USART_FLAG_TC) == (uint16_t)RESET) {}
+            USART3->DR = (*ptr++ & (uint16_t)0x01FF);
 #endif
         }
         break;
@@ -274,3 +291,15 @@ int _write(int file, char *ptr, int len) {
     }
     return len;
 }
+
+// int _write (int file, char *ptr, int len, int mode) 
+// {
+//     if ((file == STDOUT) || (file == STDERR))
+//     {
+//         ge_uart_write((const char *) ptr, len);
+//         return (len);
+//     };
+//     if (file <= STDERR) return (-1);
+//     //return (__write (file, ptr, len));
+//   return -1;
+// }

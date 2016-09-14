@@ -2,7 +2,7 @@
  * @file  main.c
  * @brief Starter code for Lab 5
  * 
- * @details Measures the frequency of the signal on PD12 and prints it
+ * @details Measures the frequency of the signal on PB10 and prints it
  * to the LCD
  * 
  * @author Ned Danyliw
@@ -21,22 +21,6 @@ int main(void)
   //Initialize library
   ge_init();
 
-  //Initialize GPIO
-  gpio_init();
-
-  //Initialize LCD
-  lcd_init();
-
-  //Initialize the USER button as an input
-  gpio_setup_pin(DISC_PBTN, GPIO_INPUT, false, false);
-
-
-  //initialize ic
-  ic_init();
-  // enable pin PD12 as an input capture with a minimum frequency
-  // of 1 Hz
-  ic_enable_pin(PD12, 1.0);
-
 
   /* Infinite loop */
   /**
@@ -48,9 +32,11 @@ int main(void)
   while (1) {
     delay_ms(200);
     lcd_clear();
-    sprintf(buf, "%f", ic_read_freq(PD12));
+    sprintf(buf, "%9f", ic_int_read_freq());
     lcd_goto(0, 0);
     lcd_puts(buf);
+
+    printf("%s\n", buf);
   }
 }
 
