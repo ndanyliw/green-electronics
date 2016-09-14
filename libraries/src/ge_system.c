@@ -47,6 +47,9 @@ void ge_init() {
 
   // initialize EEPROM
   eeprom_init();
+
+  // initialize ICP library
+  ic_int_init();
 }
 
 
