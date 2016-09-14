@@ -8,12 +8,13 @@
 
 #include "ge_ic_int.h"
 #include "ge_pins.h"
+#include <string.h>
 
 
 
 //private variables
-static __IO uint32_t _ge_ic_count;
-static __IO bool _ge_ic_ovf;
+static __IO uint32_t _ge_ic_int_count;
+static __IO bool _ge_ic_int_ovf;
 
 
 
@@ -22,13 +23,13 @@ static __IO bool _ge_ic_ovf;
  * @brief Initialize input capture timer
  * @details Initializes TIM4 for the input capture library.
  */
-void ic_init() {
+void ic_int_init() {
   //initialize variables
-  _ge_ic_count = 0;
-  _ge_ic_ovf = false;
+  _ge_ic_int_count = 0;
+  _ge_ic_int_ovf = false;
 
 
-  //enable clocks for TIM4
+  //enable clocks for TIM4 and GPIOB
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
 
   //enable GPIO
@@ -45,7 +46,7 @@ void ic_init() {
   TIM_TimeBase_InitStructure.TIM_ClockDivision = TIM_CKD_DIV1;
   TIM_TimeBase_InitStructure.TIM_CounterMode = TIM_CounterMode_Up;
   TIM_TimeBase_InitStructure.TIM_Period = 0xffff;
-  TIM_TimeBase_InitStructure.TIM_Prescaler = 0x0200; // 72 Mhz
+  TIM_TimeBase_InitStructure.TIM_Prescaler = 0x001ff; // 72 Mhz / 512 = 140.625 kHz
   TIM_TimeBase_InitStructure.TIM_RepetitionCounter = 0;
   TIM_TimeBaseInit(TIM4, &TIM_TimeBase_InitStructure);
 
@@ -64,6 +65,7 @@ void ic_init() {
 
   //enable PB10 as input capture pin
   GPIO_InitTypeDef gpio_struct;
+  GPIO_StructInit(&gpio_struct);
 
   gpio_struct.GPIO_Mode = GPIO_Mode_IN;
   gpio_struct.GPIO_Pin = _ge_pin_num[PB10];
@@ -76,7 +78,7 @@ void ic_init() {
 
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
 
-  SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOD, EXTI_PinSource12);
+  SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOB, EXTI_PinSource10);
 
   //setup NVIC for External interrupt
   NVIC_InitStructure.NVIC_IRQChannel = EXTI15_10_IRQn;
@@ -86,6 +88,7 @@ void ic_init() {
 
   NVIC_Init(&NVIC_InitStructure);
 
+  EXTI_StructInit(&EXTI_InitStruct);
   /* PB10 is connected to EXTI_Line10 */
   EXTI_InitStruct.EXTI_Line = EXTI_Line10;
   /* Enable interrupt */
@@ -113,15 +116,20 @@ void ic_init() {
  * @param pin Input capture pin to look at
  * @return The frequency in Hz
  */
-float ic_read_freq() {
+float ic_int_read_freq() {
+  uint32_t count;
+  memcpy(&count, (const void *)&_ge_ic_int_count, 4);
 
-  if (_ge_ic_count == 0)
+  if (count == 0 || _ge_ic_int_ovf)
     return 0.0;
 
   //magic number - 72MHz/512 prescaler
-  float freq = 140625.0 / ((float) _ge_ic_count);
+  return 140625.0 / (count);
+  // return (float)_ge_ic_int_count;
 
-  return freq;
+  // return 435.0;
+
+  // return freq;
 }
 
 
@@ -135,7 +143,7 @@ void TIM4_IRQHandler(void) {
 
   if (TIM_GetITStatus(TIM4, TIM_IT_Update) != RESET) {
     //if the count overflows assume frequency is 0
-    _ge_ic_ovf = true;
+    _ge_ic_int_ovf = true;
     TIM_ClearITPendingBit(TIM4, TIM_IT_Update);
   }
 }
@@ -147,16 +155,16 @@ void EXTI15_10_IRQHandler(void) {
   if (EXTI_GetITStatus(EXTI_Line10) != RESET) {
     /* Do your stuff when PB10 is changed */
     //check if overflowed
-    if (_ge_ic_ovf) {
+    if (_ge_ic_int_ovf) {
       //set count as 0
-      _ge_ic_count = 0;
+      _ge_ic_int_count = 0;
     } else {
       //get count
-      _ge_ic_count = TIM_GetCounter(TIM4);
+      _ge_ic_int_count = TIM_GetCounter(TIM4);
     }
     
     //clear overflow flag
-    _ge_ic_ovf = false;
+    _ge_ic_int_ovf = false;
     //reset count
     TIM_SetCounter(TIM4, 0);
 

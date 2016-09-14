@@ -8,7 +8,7 @@ STD_PERIPH_LIB=../project-template/Libraries
 
 vpath %.c src $(STD_PERIPH_LIB)/STM32F30x_StdPeriph_Driver/src $(STD_PERIPH_LIB)/STM32_USB-FS-Device_Driver/src
 
-CFLAGS  = -g -O2 -Wall -std=c99 -DGE_LIB -L$(STD_PERIPH_LIB) -lstm32f3
+CFLAGS  = -g -Os -Wall -std=c99 -DGE_LIB -L$(STD_PERIPH_LIB) -lstm32f3
 CFLAGS += -mlittle-endian -mthumb -mcpu=cortex-m4 -march=armv7e-m
 CFLAGS += -mfpu=fpv4-sp-d16 -mfloat-abi=hard
 CFLAGS += -ffreestanding -nostdlib

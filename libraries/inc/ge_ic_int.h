@@ -29,8 +29,8 @@
 
 
 
-void ic_init();
-float ic_read_freq();
+void ic_int_init();
+float ic_int_read_freq();
 
 
 
