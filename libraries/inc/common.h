@@ -1,8 +1,10 @@
-/*
- * common.h
- *
- *  Created on: Nov 14, 2012
- *      Author: andrei
+/**
+ * @file common.h
+ * @brief This header imports the standard imports that should be
+ * included in all files.
+ * 
+ * @author Ned Danyliw
+ * @date 9.2016
  */
 
 #ifndef COMMON_H_
@@ -17,7 +19,6 @@
 // #include "stm32f3_discovery_lsm303dlhc.h"
 // #include "stm32f3_discovery_l3gd20.h"
 #include "stm32f30x_conf.h"
-
 #include "math.h"
 
 
