@@ -54,23 +54,6 @@ int timer_init() {
   //enable TIM3
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
 
-  //setup TIM3
-  // TIM_TimeBaseInitTypeDef TIM3_base;
-  // TIM_TimeBaseStructInit(&TIM3_base);
-  // if (_ge_tim_period <= 65535) {
-  //   TIM3_base.TIM_Period = _ge_tim_period - 1;
-  //   TIM3_base.TIM_Prescaler = 0;
-  // } else {
-  //   // we want the minimum number of counts to accurately get the correct period
-  //   uint16_t presc = (_ge_tim_period >> 16);
-  //   TIM3_base.TIM_Prescaler = presc;
-  //   TIM3_base.TIM_Period = (_ge_tim_period/presc) - 1;
-  // }
-  // TIM3_base.TIM_ClockDivision = TIM_CKD_DIV1;
-  // TIM3_base.TIM_CounterMode = TIM_CounterMode_Up;
-  // TIM3_base.TIM_RepetitionCounter = 0x00;
-  // // TIM_TimeBaseInit(TIM3, &TIM3_base);
-
   //setup interrupt
   //enable timer update interrupt
   TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
@@ -81,22 +64,6 @@ int timer_init() {
   NVIC_init_struct.NVIC_IRQChannelPreemptionPriority = 0x0f;
   NVIC_init_struct.NVIC_IRQChannelCmd = ENABLE;
   NVIC_Init(&NVIC_init_struct);
-
-  // TIM_TimeBaseInitTypeDef TIM3_base;
-  // TIM_TimeBaseStructInit(&TIM3_base);
-  // if (_ge_tim_period <= 65535) {
-  //   TIM3_base.TIM_Period = _ge_tim_period - 1;
-  //   TIM3_base.TIM_Prescaler = 0;
-  // } else {
-  //   // we want the minimum number of counts to accurately get the correct period
-  //   uint16_t presc = (_ge_tim_period >> 16);
-  //   TIM3_base.TIM_Prescaler = presc;
-  //   TIM3_base.TIM_Period = (_ge_tim_period/(presc + 1)) - 1;
-  // }
-  // TIM3_base.TIM_ClockDivision = TIM_CKD_DIV1;
-  // TIM3_base.TIM_CounterMode = TIM_CounterMode_Up;
-  // TIM3_base.TIM_RepetitionCounter = 0x00;
-  // TIM_TimeBaseInit(TIM3, &TIM3_base);
 
   //enable counter
   TIM_Cmd(TIM3, ENABLE);

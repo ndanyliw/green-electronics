@@ -3,25 +3,22 @@
  * @brief Implementation of input capture library using software interrupts
  * 
  * @author Ned Danyliw
- * @date  10.2015
+ * @date  9.2016
  */
 
 #include "ge_ic_int.h"
 #include "ge_pins.h"
 #include <string.h>
 
-
-
 //private variables
 static __IO uint32_t _ge_ic_int_count;
 static __IO bool _ge_ic_int_ovf;
 
 
-
-
 /**
  * @brief Initialize input capture timer
- * @details Initializes TIM4 for the input capture library.
+ * @details Initializes TIM4 for the input capture library and
+ * sets PB10 as an input.
  */
 void ic_int_init() {
   //initialize variables
@@ -52,7 +49,7 @@ void ic_int_init() {
 
   TIM_ClearFlag(TIM4, TIM_FLAG_Update);
 
-  //setup NVIC
+  //setup NVIC for TIM4
   NVIC_InitStructure.NVIC_IRQChannel = TIM4_IRQn;
   NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 3;
@@ -73,7 +70,7 @@ void ic_int_init() {
 
   GPIO_Init(_ge_pin_port[PB10], &gpio_struct);
 
-  //TODO - attach interrupt to PB10
+  //Attach interrupt to PB10
   EXTI_InitTypeDef EXTI_InitStruct;
 
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
@@ -117,6 +114,7 @@ void ic_int_init() {
  * @return The frequency in Hz
  */
 float ic_int_read_freq() {
+  // copy result so it isn't updated during frequency calculation
   uint32_t count;
   memcpy(&count, (const void *)&_ge_ic_int_count, 4);
 
@@ -125,11 +123,6 @@ float ic_int_read_freq() {
 
   //magic number - 72MHz/512 prescaler
   return 140625.0 / (count);
-  // return (float)_ge_ic_int_count;
-
-  // return 435.0;
-
-  // return freq;
 }
 
 
@@ -137,7 +130,8 @@ float ic_int_read_freq() {
 /*****************Interrupt Handler*********************/
 /**
  * @brief Handler for TIM4 global interrupt
- * @details TIM4 handler
+ * @details TIM4 handler. Sets minimum frequency that can be
+ * measured.
  */
 void TIM4_IRQHandler(void) {
 
@@ -149,7 +143,12 @@ void TIM4_IRQHandler(void) {
 }
 
 
-// Handler for external interrupt
+/**
+ * @brief Handler for external interrupt
+ * @details Handler calculates how many timer ticks have occured
+ * since last external interrupt event. Resets the timer count
+ * to 0 after interrupt.
+ */
 void EXTI15_10_IRQHandler(void) {
   /* Make sure that interrupt flag is set */
   if (EXTI_GetITStatus(EXTI_Line10) != RESET) {

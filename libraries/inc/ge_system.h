@@ -14,8 +14,6 @@
  extern "C" {
 #endif
 
-
-
 #include "common.h"
 
 //system ticks per second (1 ms period)

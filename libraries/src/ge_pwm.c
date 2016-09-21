@@ -1,22 +1,31 @@
-/*
- * ee152_pwm.c
- *
- *  Created on: Oct 19, 2014
- *      Author: Ned
+/**
+ * @file ge_pwm.c
+ * @brief PWM library
+ * 
+ * @author Ned Danyliw
+ * @date 09.2016
  */
 
 #include "ge_pwm.h"
 
+// how many ticks to make PWM period
 int _ge_pwm_period;
 
-//initialize PWM timer (TIMER0)
+/**
+ * @brief Initialize PWM library
+ * @details Initializes the PWM library. This includes setting
+ * up TIM1 as the PWM timer and enabling the output compare
+ * channels on TIM1.
+ */
 void pwm_init(void) {
+  // initialize PWM period
   _ge_pwm_period = 65535;
 
   TIM_TimeBaseInitTypeDef TIM_TimeBase_InitStructure;
   TIM_OCInitTypeDef TIM_OC_InitStructure;
   NVIC_InitTypeDef NVIC_InitStructure;
 
+  // Setup TIM1
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE);
 
   TIM_TimeBaseStructInit(&TIM_TimeBase_InitStructure);
@@ -29,6 +38,7 @@ void pwm_init(void) {
   TIM_TimeBase_InitStructure.TIM_RepetitionCounter = 0;
   TIM_TimeBaseInit(TIM1, &TIM_TimeBase_InitStructure);
 
+  // Enable OC channels
   TIM_OC_InitStructure.TIM_OCMode = TIM_OCMode_PWM1;
   TIM_OC_InitStructure.TIM_OutputState = TIM_OutputState_Enable;
   TIM_OC_InitStructure.TIM_OutputNState = TIM_OutputNState_Enable;
@@ -51,53 +61,11 @@ void pwm_init(void) {
   TIM_OC4Init(TIM1, &TIM_OC_InitStructure);
   TIM_OC4PreloadConfig (TIM1, TIM_OCPreload_Enable);
 
-//  NVIC_InitStructure.NVIC_IRQChannel = TIM1_CC_IRQn;
-//  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
-//  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 2;
-//  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-//  NVIC_Init(&NVIC_InitStructure);
-
   TIM_ARRPreloadConfig(TIM1, DISABLE);
   TIM_Cmd(TIM1, ENABLE);
 
   TIM_CtrlPWMOutputs(TIM1, ENABLE);
-
-//  TIM_ITConfig(TIM1, TIM_IT_CC1, ENABLE);
 }
-
-/* DEPRECATED */
-//enable pwm channel
-void pwm_enable_chan(int chan) {
-  GPIO_InitTypeDef GPIO_InitStructure;
-
-  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
-
-  GPIO_InitStructure.GPIO_Pin = (0x1)<<(chan-1 + 8);
-
-
-  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-
-  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);
-
-  switch(chan) {
-    case PWM_CHAN1:
-      GPIO_PinAFConfig(GPIOA, GPIO_PinSource8, GPIO_AF_6);
-      break;
-    case PWM_CHAN2:
-      GPIO_PinAFConfig(GPIOA, GPIO_PinSource9, GPIO_AF_6);
-      break;
-    case PWM_CHAN3:
-      GPIO_PinAFConfig(GPIOA, GPIO_PinSource10, GPIO_AF_6);
-      break;
-    case PWM_CHAN4:
-      GPIO_PinAFConfig(GPIOA, GPIO_PinSource11, GPIO_AF_11);
-      break;
-  }
-}
-
 
 /**
  * @brief Sets the pin to connect to the appropriate timer channel
@@ -171,17 +139,44 @@ int pwm_set_pin(int pin) {
   return chan;
 }
 
-//set pwm count (16 bit unsigned)
+
+/**
+ * @brief Set the PWM value of the specified channel
+ * @details Sets the PWM value of the specified channel as a
+ * float. The method handles converting this to a number of
+ * timer ticks that is used by the actual output compare
+ * registers.
+ * 
+ * @param chan Channel to set (between 1-4)
+ * @param duty Duty cycle for PWM pin (between 0-1.0)
+ */
 void pwm_set(int chan, float duty) {
   int compare_val = (int)(duty*(float)_ge_pwm_period);
   pwm_set_int(chan,compare_val);
 }
 
+
+/**
+ * @brief Return the maximum integer that can be used for an
+ * output compare register.
+ * @details Returns the max period of the PWM timer
+ * @return Max integer for output compare
+ */
 int pwm_get_max_int()
 {
 	return _ge_pwm_period;
 }
 
+
+/**
+ * @brief Set the output compare register directly
+ * @details Sets the ouptut compare register directly. No bounds
+ * checking is done so the programmer has to know what the
+ * maximum allowed value is.
+ * 
+ * @param chan Channel to set (between 1-4)
+ * @param compare_val Integer value to set register
+ */
 void pwm_set_int(int chan, int compare_val)
 {
 	 switch(chan) {
@@ -203,7 +198,16 @@ void pwm_set_int(int chan, int compare_val)
 	  }
 }
 
-//set pwm frequency (returns the actual frequency the pwm wave is set to)
+
+/**
+ * @brief Sets PWM frequency
+ * @details Sets the PWM frequency by setting up TIM1 appropriately
+ * and setting the PWM period. The method then returns the actual
+ * frequency of the PWM signal.
+ * 
+ * @param freq Frequency to set in Hz as a float
+ * @return The actual achieved frequency
+ */
 float pwm_freq(float freq) {
   float base_freq = 72000000.0; //arm clock frequency
   float actual_freq = 0.0;

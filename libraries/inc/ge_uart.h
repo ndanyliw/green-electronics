@@ -21,6 +21,7 @@
 #include "ge_pins.h"
 #include "buffer.h"
 
+// Buffered mode uses interrupts to handle communication
 #define BUFFERED
 #ifdef BUFFERED
 extern volatile FIFO_TypeDef U1Rx, U1Tx;
@@ -31,8 +32,6 @@ void ge_uart_put(uint8_t ch);
 uint8_t ge_uart_get(void);
 int ge_uart_available();
 void ge_uart_write(char *str, int len);
-// int _write(int file, char *ptr, int len);
-// int _read(int file, char *ptr, int len);
 
 #ifdef __cplusplus
  }
