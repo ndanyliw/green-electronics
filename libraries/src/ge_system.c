@@ -34,8 +34,6 @@ void ge_init() {
   // initialize USART library
   ge_uart_init(115200);
 
-
-
   // initialize timer library
   timer_init();
 

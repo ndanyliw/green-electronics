@@ -19,8 +19,18 @@ volatile FIFO_TypeDef U1Rx, U1Tx;
 #endif
 
 
+/**
+ * @brief Initialize serial library
+ * @details Sets PC4 and PC5 as TX and RX pins respectively.
+ * The library uses the USART1 module and handles its
+ * initialization as well as the necessary GPIO init structures
+ * and interrupts.
+ * 
+ * @param baud Baud rate for serial communication
+ */
 void ge_uart_init(uint32_t baud) {
   #ifdef BUFFERED
+  // initialize circular FIFO buffers
   BufferInit(&U1Rx);
   BufferInit(&U1Tx);
   #endif
@@ -33,6 +43,7 @@ void ge_uart_init(uint32_t baud) {
   RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOC, ENABLE);
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
 
+  // Initialize GPIO
   //Set USART1 Tx (PC.4) as AF push-pull
   //Set USART1 Rx (PC.5) as input floating
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4 | GPIO_Pin_5;
@@ -46,6 +57,7 @@ void ge_uart_init(uint32_t baud) {
   GPIO_PinAFConfig(GPIOC, GPIO_PinSource4, GPIO_AF_7);
   GPIO_PinAFConfig(GPIOC, GPIO_PinSource5, GPIO_AF_7);
   
+  // Initialize USART1
   USART_StructInit(&USART_InitStructure);
   USART_ClockStructInit(&USART_ClockInitStructure);
   USART_ClockInit(USART1, &USART_ClockInitStructure);
@@ -85,6 +97,14 @@ void ge_uart_init(uint32_t baud) {
   #endif
 }
 
+
+/**
+ * @brief Send a character over the serial port
+ * @details Sends a single character over the serial port. This
+ * method will block if it is not buffered.
+ * 
+ * @param ch Character to send
+ */
 void ge_uart_put(uint8_t ch) {
   #ifdef BUFFERED
     //put char to the buffer
@@ -100,6 +120,14 @@ void ge_uart_put(uint8_t ch) {
   #endif
 }
 
+
+/**
+ * @brief Returns the recieved character from the serial port
+ * @details Returns the recieved character from the serial port.
+ * This method will block if there is no character in the RX buffer
+ * or wait until a character is recieved if no buffer is used.
+ * @return Character recieved
+ */
 uint8_t ge_uart_get(void) {
   #ifdef BUFFERED
     uint8_t ch;
@@ -113,6 +141,15 @@ uint8_t ge_uart_get(void) {
   #endif
 }
 
+
+/**
+ * @brief Checks if there is a character waiting to be recieved
+ * @details Checks if there is a character waiting to be recieved.
+ * In the buffered mode, this checks if the buffer is not empty. In
+ * the non-buffered mode, the method checks if the USART has
+ * recieved a character
+ * @return 1 if character available.
+ */
 int ge_uart_available() {
   #ifdef BUFFERED
     return !(BufferIsEmpty(U1Rx));
@@ -121,50 +158,26 @@ int ge_uart_available() {
   #endif
 }
 
+
+/**
+ * @brief Write a string to the serial port
+ * @details Sends each character individually over the serial port
+ * 
+ * @param str String to send
+ * @param len Length of string
+ */
 void ge_uart_write(char *str, int len) {
   for (int i = 0; i < len; i++) {
     ge_uart_put(str[i]);
   }
 }
 
-// int _write(int file, char *ptr, int len) {
-//     int n;
-//     switch (file) {
-//     case STDOUT_FILENO: /*stdout*/
-//         for (n = 0; n < len; n++) {
-//             Usart1Put(*ptr++ & (uint16_t)0x01FF);
-//         }
-//         break;
-//     case STDERR_FILENO: /* stderr */
-//         for (n = 0; n < len; n++) {
-//             Usart1Put(*ptr++ & (uint16_t)0x01FF);
-//         }
-//         break;
-//     default:
-//         errno = EBADF;
-//         return -1;
-//     }
-//     return len;
-// }
 
-// int _read(int file, char *ptr, int len) {
-//     int n;
-//     int num = 0;
-//     switch (file) {
-//     case STDIN_FILENO:
-//         for (n = 0; n < len; n++) {
-//             char c = Usart1Get();
-//             *ptr++ = c;
-//             num++;
-//         }
-//         break;
-//     default:
-//         errno = EBADF;
-//         return -1;
-//     }
-//     return num;
-// }
-
+/**
+ * @brief USART1 handler
+ * @details Interrupt handler stores recieved data in RX buffer
+ * and sends data from TX buffer if it is available.
+ */
 void USART1_IRQHandler(void)
 {
   uint8_t ch;

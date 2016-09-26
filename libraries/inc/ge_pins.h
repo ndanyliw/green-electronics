@@ -64,6 +64,7 @@ static uint16_t _ge_pin_num[] = {
   GPIO_Pin_6, GPIO_Pin_9, GPIO_Pin_10
 };
 
+// Define pin source LUT
 static uint16_t _ge_pin_source[] = {
   GPIO_PinSource0, GPIO_PinSource1, GPIO_PinSource2, GPIO_PinSource3, 
   GPIO_PinSource4, GPIO_PinSource5, GPIO_PinSource6, GPIO_PinSource7, 
@@ -95,6 +96,7 @@ static uint16_t _ge_pin_source[] = {
   GPIO_PinSource9, GPIO_PinSource10
 };
 
+// Define pin port LUT
 static GPIO_TypeDef* _ge_pin_port[] = {
   GPIOA, GPIOA, GPIOA, GPIOA, GPIOA, GPIOA, GPIOA, GPIOA,
   GPIOA, GPIOA, GPIOA, GPIOA, GPIOA, GPIOA, GPIOA, GPIOA,
@@ -110,6 +112,8 @@ static GPIO_TypeDef* _ge_pin_port[] = {
 };
 #endif
 
+
+// Green Electronics Breakout board pin definitions
 // Pushbuttons
 #define GE_PBTN1        PC0
 #define GE_PBTN2        PC1

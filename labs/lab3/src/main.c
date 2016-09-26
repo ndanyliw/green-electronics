@@ -144,9 +144,6 @@ int main(void)
   // Initialize library
   ge_init();
 
-  // Initialize GPIO library
-  // gpio_init();
-
   // Initialize LEDs
   setup_led_gpio();
   led_state = false;
@@ -158,28 +155,15 @@ int main(void)
   // Initialize PBTN1
   gpio_setup_pin(GE_PBTN1, GPIO_INPUT, false, false);
 
-  // Initialize USART
-  // ge_uart_init(115200);
-
   // Print to serial port
   printf("Hello, World!\n");
 
-  // Initialize LCD library
-  // lcd_init();
-
-  // // Print Hello World
+  // Print Hello World
   lcd_clear();
   lcd_goto(0, 0);
   lcd_puts("Hello, World!");
 
-
-  // initialize ADCs
-  // adc_init();
-
-  // timer_init();
-
-  // Initialize timer library
-  
+  // Setup timer library
   // Set minimum timestep to 1ms (number of counts referecned to 
   // a 72MHz clock)
   timer_set_timestep(72000);
@@ -193,15 +177,15 @@ int main(void)
   // set pwm level for PWM demo
   float pwm_level = 0.0;
 
-  // // enable PWM library
-  // pwm_init();
+  // setup PWM library
   pwm_freq(10000.0);
 
-
+  // setup ADC
+  // set sampling rate to 10kHz
   adc_set_fs(10000);
-
+  // register ADC callback
   adc_callback(&my_adc_callback);
-
+  // enable ADC channels
   adc_enable_channels(chan_to_conv, NUM_ADC);
   adc_initialize_channels();
   adc_start();

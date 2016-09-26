@@ -35,7 +35,6 @@ enum _GE_TYPE { GE_SINGLESHOT, GE_PERIODIC };
 
 // Timer ID number returned when registering a callback. Can be
 // used to start/stop the appropriate timer
-
 typedef int timer_id_t;
 
 

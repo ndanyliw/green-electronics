@@ -1,8 +1,9 @@
-/*
- * ge_pwm.h
- *
- *  Created on: Oct 19, 2014
- *      Author: Ned
+/**
+ * @file ge_pwm.h
+ * @brief PWM library
+ * 
+ * @author Ned Danyliw
+ * @date 09.2016
  */
 
 #ifndef GE_PWM_H_
@@ -39,9 +40,9 @@
 //initialize PWM timer (TIMER1)
 void pwm_init(void);
 
-/* DEPRECATED */
-//enable pwm channel
-void pwm_enable_chan(int chan);
+//connects specified pin to the appropriate timer channel.
+//look at the source code to see available pins
+int pwm_set_pin(int pin);
 
 //set pwm count (duty cycle between 0 and 1.0)
 void pwm_set(int chan, float duty);
@@ -56,9 +57,6 @@ int pwm_get_max_int();
 //WARNING, no bounds checking is done
 void pwm_set_int(int chan, int compare_val);
 
-//connects specified pin to the appropriate timer channel.
-//look at the source code to see available pins
-int pwm_set_pin(int pin);
 
 #ifdef __cplusplus
  }

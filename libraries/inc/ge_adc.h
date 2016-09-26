@@ -1,10 +1,13 @@
-/*
- * ge_adc.h
-
- *
- *  Created on: Oct 3, 2014
- *      Author: Ned
+/**
+ * @file ge_adc.h
+ * @brief Library to interface with the ADCs on the STM32
+ * microcontroller and handle the DMA transfers for storing
+ * the results.
+ * 
+ * @author Ned Danyliw
+ * @date 9.2016
  */
+
 
 #ifndef GE_ADC_H_
 #define GE_ADC_H_
@@ -21,16 +24,16 @@
 #include "stm32f30x_dma.h"
 #include "stm32f30x_tim.h"
 #include "ge_pins.h"
-// #include "cortexm/ExceptionHandlers.h"
 
-//definitions
+// Definitions
 /**
- * Enumerate ADC channels mapped to external pins on the STM32 Discovery
+ * Enumerate ADC channels mapped to external pins on the STM32
+ * Discovery
  */
+// Number of available ADC channels
 #define GE_NUM_ADC 39
 
-
-
+// Enumerated type for available ADC channels.
 typedef enum ADC_CHAN
 { 
   GE_ADC1_1, GE_ADC1_2, GE_ADC1_3, GE_ADC1_4, GE_ADC1_5,
@@ -43,7 +46,8 @@ typedef enum ADC_CHAN
   GE_ADC4_1, GE_ADC4_2, GE_ADC4_3, GE_ADC4_4, GE_ADC4_5, GE_ADC4_12, GE_ADC4_13 
 } ADC_CHAN_Type;
 
-// GE breakout board
+
+// GE breakout board pins
 // A1 - instrumentation amp (default gain = 5) - PA1
 #define GE_A1           GE_ADC1_2
 // A2 - instrumentation amp (defualt gain = 5) - PA2
@@ -56,7 +60,6 @@ typedef enum ADC_CHAN
 
 // physical pin mapping of ADC channels
 extern GPIOPin adc_pin_map[GE_NUM_ADC];
-
 extern ADC_TypeDef *adc_bank_map[GE_NUM_ADC];
 extern uint8_t adc_chan_map[GE_NUM_ADC];
 
@@ -71,63 +74,49 @@ typedef struct
   uint16_t period;
 } GE_ADC_chan_info;
 
+// Array that keeps track of the conversion order
 GE_ADC_chan_info adc_conv_order[GE_NUM_ADC];
 
-// ADC_CHAN_Type adc_conv_order[GE_NUM_ADC];
-
-// volatile unsigned short ADC_Val[2];
+// Array to hold ADC conversion results
 volatile unsigned short adc_readings[GE_NUM_ADC];
 
-//saved data buffer
-uint32_t data_buf[16];
-
-//conversion order
+// conversion order
 int chan_order1[16];
 int chan_order2[16];
 int chan_order3[16];
 int chan_order4[16];
 
-//number of channels per ADC
+// number of channels per ADC
 uint8_t num_chan_adc1;
 uint8_t num_chan_adc2;
 uint8_t num_chan_adc3;
 uint8_t num_chan_adc4;
 
-//associated callbacks
-void (*adc_reg_callbacks1[16])(uint32_t);
-void (*adc_reg_callbacks2[16])(uint32_t);
-void (*adc_reg_callbacks3[16])(uint32_t);
-void (*adc_reg_callbacks4[16])(uint32_t);
-
-//registered callback
+// registered callback
 void (*adc_reg_callback)(uint16_t *);
 
-//initialize ADC settings
+
+// ADC Methods
+// initialize ADC settings
 void adc_init(void);
 void adc_deinit(void); //resets all ADC settings
 
-//startup ADCs
+// startup ADCs
 void adc_start(void);
 void adc_stop(void);
 
-//enable channels
-void adc_enable_channel(uint16_t chan);
-//void adc_disable_channel(uint16_t chan, uint16_t rank);
-
+// enable channels for conversion
 void adc_enable_channels(ADC_CHAN_Type *channels, uint16_t num_conv);
 void adc_initialize_channels();
 
-////set channel priority
-//void adc_set_chan_rank(uint16_t chan, uint16_t rank);
-
-////calibrate ADCs
-//void adc_selfcal();
-
-//set sampling frequency
+// set sampling frequency
 void adc_set_fs(float fs);
 
-//attach callback function to a specific channel
+// attach callback function to be called when ADC finishes conversion
 void adc_callback(void (*callback)(uint16_t *));
+
+// get ADC state
+uint8_t adc_get_state();
 
 #ifdef __cplusplus
 }
