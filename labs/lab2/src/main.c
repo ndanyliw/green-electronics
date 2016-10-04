@@ -25,7 +25,7 @@ uint8_t state = DISP_MAIN;
 bool btn_pressed = false;
 
 void change_state() {
-  if (gpio_read_pin(GE_PBTN1)) {
+  if (!gpio_read_pin(GE_PBTN1)) {
     if (!btn_pressed) {
       state++;
       if (state > DISP_CALI) state = DISP_MAIN;
@@ -52,6 +52,7 @@ void start_conversion() {
   // Initialize ADC channels (A3 - voltage reading, A1 - current reading)
   ADC_CHAN_Type chan_to_convert[2] = {GE_A3, GE_A1};
   adc_enable_channels(chan_to_convert, 2);
+  adc_initialize_channels();
 
   adc_callback(&my_adc_callback);
   adc_start();
@@ -91,7 +92,7 @@ int main() {
         lcd_goto(0, 3);
         lcd_puts("2 - OK");
 
-        if (gpio_read_pin(GE_PBTN2)) {
+        if (!gpio_read_pin(GE_PBTN2)) {
           calibrate_offset();
           lcd_goto(0, 2);
           lcd_puts("Stored");
@@ -105,7 +106,7 @@ int main() {
         lcd_goto(0, 3);
         lcd_puts("2 - OK");
 
-        if (gpio_read_pin(GE_PBTN2)) {
+        if (!gpio_read_pin(GE_PBTN2)) {
           calibrate_voltage();
           lcd_goto(0, 2);
           lcd_puts("Stored");
@@ -119,7 +120,7 @@ int main() {
         lcd_goto(0, 3);
         lcd_puts("2 - OK");
 
-        if (gpio_read_pin(GE_PBTN2)) {
+        if (!gpio_read_pin(GE_PBTN2)) {
           calibrate_current();
           lcd_goto(0, 2);
           lcd_puts("Stored");
