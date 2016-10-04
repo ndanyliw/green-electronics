@@ -520,38 +520,43 @@ void adc_initialize_channels() {
 
   // setup DMAs
 
-  // DMA_Cmd(DMA1_Channel1, DISABLE);
-  // DMA_Cmd(DMA1_Channel2, DISABLE);
+  DMA_Cmd(DMA1_Channel1, DISABLE);
+  DMA_Cmd(DMA1_Channel2, DISABLE);
 
-  // // DMA for ADC1
-  // DMA_InitTypeDef DMA_InitStructure;
-  // DMA_InitStructure.DMA_BufferSize = num_chan_adc1;
-  // DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
-  // DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)&data_buf1[0];
-  // DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Word;
-  // DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
-  // DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
-  // DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC1->DR;
-  // DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
-  // DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
-  // DMA_InitStructure.DMA_Priority = DMA_Priority_High;
+  // DMA for ADC1
+  DMA_InitTypeDef DMA_InitStructure;
+  DMA_StructInit(&DMA_InitStructure);
+  DMA_InitStructure.DMA_BufferSize = num_chan_adc1;
+  DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
+  DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)&data_buf1[0];
+  DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Word;
+  DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+  DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
+  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC1->DR;
+  DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
+  DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+  DMA_InitStructure.DMA_Priority = DMA_Priority_High;
 
-  // DMA_Init(DMA1_Channel1, &DMA_InitStructure);
+  DMA_Init(DMA1_Channel1, &DMA_InitStructure);
 
 
-  // // DMA for ADC2
-  // DMA_InitStructure.DMA_BufferSize = num_chan_adc2;
-  // DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
-  // DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)&data_buf2[0];
-  // DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Word;
-  // DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
-  // DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
-  // DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC2->DR;
-  // DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
-  // DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
-  // DMA_InitStructure.DMA_Priority = DMA_Priority_High;
+  // DMA for ADC2
+  DMA_StructInit(&DMA_InitStructure);
+  DMA_InitStructure.DMA_BufferSize = num_chan_adc2;
+  DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
+  DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)&data_buf2[0];
+  DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Word;
+  DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+  DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
+  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC2->DR;
+  DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
+  DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+  DMA_InitStructure.DMA_Priority = DMA_Priority_High;
 
-  // DMA_Init(DMA2_Channel1, &DMA_InitStructure);
+  DMA_Init(DMA2_Channel1, &DMA_InitStructure);
+
+  DMA_Cmd(DMA1_Channel1, ENABLE);
+  DMA_Cmd(DMA1_Channel2, ENABLE);
 
   // enable ADCs
   // ADC_Cmd(ADC1, ENABLE);

@@ -68,6 +68,8 @@ int main() {
 
   timer_start(state_tim);
 
+  start_conversion();
+
   //initialize power meter
   meter_init();
 
