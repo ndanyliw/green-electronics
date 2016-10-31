@@ -13,6 +13,7 @@
 //private variables
 static __IO uint32_t _ge_ic_int_count;
 static __IO bool _ge_ic_int_ovf;
+static __IO uint32_t _ge_ic_min_count;
 
 
 /**
@@ -93,7 +94,7 @@ void ic_int_init() {
   /* Interrupt mode */
   EXTI_InitStruct.EXTI_Mode = EXTI_Mode_Interrupt;
   /* Triggers on rising and falling edge */
-  EXTI_InitStruct.EXTI_Trigger = EXTI_Trigger_Rising;
+  EXTI_InitStruct.EXTI_Trigger = EXTI_Trigger_Rising_Falling;
   /* Add to EXTI */
   EXTI_Init(&EXTI_InitStruct);
 
@@ -121,10 +122,15 @@ float ic_int_read_freq() {
   if (count == 0 || _ge_ic_int_ovf)
     return 0.0;
 
-  //magic number - 72MHz/512 prescaler
-  return 140625.0 / (count);
+  //magic number - 72MHz/512/2 prescaler
+  return 140625.0 / 2.0 / (count);
 }
 
+
+void ic_int_set_maxf(float f) {
+  // calculate how many counts corresponds to maximum expected frequency
+  _ge_ic_min_count = (int)(140625.0 / 2.0 /f);
+}
 
 
 /*****************Interrupt Handler*********************/
@@ -157,15 +163,21 @@ void EXTI15_10_IRQHandler(void) {
     if (_ge_ic_int_ovf) {
       //set count as 0
       _ge_ic_int_count = 0;
+      //clear overflow flag
+      _ge_ic_int_ovf = false;
+      //reset count
+      TIM_SetCounter(TIM4, 0);
     } else {
       //get count
-      _ge_ic_int_count = TIM_GetCounter(TIM4);
+      uint32_t count = TIM_GetCounter(TIM4);
+      if (count >= _ge_ic_min_count) {
+        _ge_ic_int_count = count;
+        //clear overflow flag
+        _ge_ic_int_ovf = false;
+        //reset count
+        TIM_SetCounter(TIM4, 0);
+      }
     }
-    
-    //clear overflow flag
-    _ge_ic_int_ovf = false;
-    //reset count
-    TIM_SetCounter(TIM4, 0);
 
     /* Clear interrupt flag */
     EXTI_ClearITPendingBit(EXTI_Line10);

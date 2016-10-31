@@ -11,6 +11,11 @@
 #include "ge_libs.h"
 
 
+int compare_function(const void* a, const void* b){
+  return (*(float*)a - *(float*)b);
+}
+
+
 /**
   * @brief  Main program.
   * @param  None 
@@ -21,6 +26,7 @@ int main(void)
   //Initialize library
   ge_init();
 
+  ic_int_set_maxf(600.0);
 
   /* Infinite loop */
   /**
@@ -28,15 +34,47 @@ int main(void)
    * depressed, it will switch to pulsing the buttons with
    * PWM.
    */
-  char buf[10];
-  while (1) {
-    delay_ms(200);
-    lcd_clear();
-    sprintf(buf, "%9f", ic_int_read_freq());
-    lcd_goto(0, 0);
-    lcd_puts(buf);
+  uint8_t filter_number = 11;
 
-    printf("%s\n", buf);
+  float speed_buf[filter_number];
+  float sorted_buf[filter_number];
+
+  float filtered_speed = 0;
+
+  uint8_t counter = 0;
+  uint8_t index = 0;
+
+  while (1) {
+
+    if (index>filter_number-1){
+      index =0;
+    }
+    float temp = ic_int_read_freq();
+    // if (temp<500){
+      speed_buf[index]=temp;
+      index++;
+    // }
+    // speed_buf[index] = ic_int_read_freq();
+    // index++;
+
+    memcpy(sorted_buf, speed_buf, filter_number*sizeof(float)); //make copy so we can sort in place
+    qsort(sorted_buf, filter_number, sizeof(float), compare_function);
+
+    filtered_speed = sorted_buf[filter_number/4+1];
+
+    if (counter % 5 == 0){
+      counter = 0;
+      char buf[10];
+      lcd_clear();
+      sprintf(buf, "%9f", filtered_speed);
+      lcd_goto(0, 0);
+      lcd_puts(buf);
+
+      // lcd_puts("hello world!!!!!!");
+    }
+    delay_ms(10);
+   
+    counter++;
   }
 }
 
