@@ -26,14 +26,9 @@ int main(void)
   //Initialize library
   ge_init();
 
+  // Set maximum capture frequency
   ic_int_set_maxf(600.0);
 
-  /* Infinite loop */
-  /**
-   * Flashes the ring of LEDs. If the user button is
-   * depressed, it will switch to pulsing the buttons with
-   * PWM.
-   */
   uint8_t filter_number = 11;
 
   float speed_buf[filter_number];
@@ -47,15 +42,11 @@ int main(void)
   while (1) {
 
     if (index>filter_number-1){
-      index =0;
+      index = 0;
     }
     float temp = ic_int_read_freq();
-    // if (temp<500){
-      speed_buf[index]=temp;
-      index++;
-    // }
-    // speed_buf[index] = ic_int_read_freq();
-    // index++;
+    speed_buf[index]=temp;
+    index++;
 
     memcpy(sorted_buf, speed_buf, filter_number*sizeof(float)); //make copy so we can sort in place
     qsort(sorted_buf, filter_number, sizeof(float), compare_function);
@@ -69,11 +60,12 @@ int main(void)
       sprintf(buf, "%9f", filtered_speed);
       lcd_goto(0, 0);
       lcd_puts(buf);
-
-      // lcd_puts("hello world!!!!!!");
     }
+
+    // ADD CONTROLLER CODE HERE
+
+
     delay_ms(10);
-   
     counter++;
   }
 }
