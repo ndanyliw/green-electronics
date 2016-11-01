@@ -11,7 +11,8 @@
 #include <string.h>
 
 //private variables
-static __IO uint32_t _ge_ic_int_count;
+static __IO uint32_t _ge_ic_int_count, _ge_ic_int_last_count;
+// static __IO float _ge_ic_int_
 static __IO bool _ge_ic_int_ovf;
 static __IO uint32_t _ge_ic_min_count;
 
@@ -24,6 +25,7 @@ static __IO uint32_t _ge_ic_min_count;
 void ic_int_init() {
   //initialize variables
   _ge_ic_int_count = 0;
+  _ge_ic_int_last_count = 0;
   _ge_ic_int_ovf = false;
 
 
@@ -163,6 +165,7 @@ void EXTI15_10_IRQHandler(void) {
     if (_ge_ic_int_ovf) {
       //set count as 0
       _ge_ic_int_count = 0;
+      _ge_ic_int_last_count = 0;
       //clear overflow flag
       _ge_ic_int_ovf = false;
       //reset count
@@ -171,11 +174,15 @@ void EXTI15_10_IRQHandler(void) {
       //get count
       uint32_t count = TIM_GetCounter(TIM4);
       if (count >= _ge_ic_min_count) {
+        _ge_ic_int_last_count = _ge_ic_int_count;
         _ge_ic_int_count = count;
         //clear overflow flag
         _ge_ic_int_ovf = false;
         //reset count
         TIM_SetCounter(TIM4, 0);
+      } else {
+        TIM_SetCounter(TIM4, _ge_ic_int_count + count);
+        _ge_ic_int_count = _ge_ic_int_last_count;
       }
     }
 

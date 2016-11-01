@@ -51,9 +51,9 @@ int main(void)
     memcpy(sorted_buf, speed_buf, filter_number*sizeof(float)); //make copy so we can sort in place
     qsort(sorted_buf, filter_number, sizeof(float), compare_function);
 
-    filtered_speed = sorted_buf[filter_number/4+1];
+    filtered_speed = sorted_buf[filter_number/2+1];
 
-    if (counter % 5 == 0){
+    if (counter % 20 == 0){
       counter = 0;
       char buf[10];
       lcd_clear();
