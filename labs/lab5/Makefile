@@ -92,6 +92,9 @@ $(PROJ_NAME).elf: $(OBJS)
 	$(SIZE) $(PROJ_NAME).elf
 
 program: all
+	openocd -f $(OPENOCD_BOARD_DIR)/stm32f3discovery_revD.cfg -f $(OPENOCD_PROC_FILE) -c "stm_flash `pwd`/$(PROJ_NAME).bin" -c shutdown
+
+program_old: all
 	openocd -f $(OPENOCD_BOARD_DIR)/stm32f3discovery.cfg -f $(OPENOCD_PROC_FILE) -c "stm_flash `pwd`/$(PROJ_NAME).bin" -c shutdown
 
 debug: program
